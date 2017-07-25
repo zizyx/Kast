@@ -10,6 +10,23 @@ climateControl *climateControl::getInstance(){
 	return instance; 	
 }
 
+static uint16_t stringToUint16(char* str, uint8_t str_len) {
+	double val = 0;
+	for (int i = 0, j = str_len - 1; i < str_len; i++, j--) {
+		val += (str[i] - '0') * pow(10, j);
+		// uart::getInstance()->Transmit('\n'); //Echo what is sent to the device	
+		// uart::getInstance()->Transmit(str[i] - '0'); //Echo what is sent to the device	
+		// uart::getInstance()->TransmitString(" --- "); //Echo what is sent to the device	
+		// uart::getInstance()->Transmit(val); //Echo what is sent to the device	
+	}
+	return round(val);
+}
+
+static uint8_t stringToUint8(char* str, uint8_t str_len) {
+	return (uint8_t)stringToUint16(str, str_len);
+}
+
+
 climateControl::climateControl() 
 : baro_inside(BMP280_ADDRESS_INSIDE) , baro_outside(BMP280_ADDRESS_OUTSIDE)
  {
@@ -185,9 +202,6 @@ void climateControl::setWaterPumpHardware() {
 	// If waterpump status changed update time. if not keep time.
 }
 
-
-
-
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	char string[81] = {"e\n\0"};
 	uart::getInstance()->TransmitString(cmd);
@@ -255,19 +269,4 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	getInstance()->updateHardware();
 }
 
-static uint16_t stringToUint16(char* str, uint8_t str_len) {
-	double val = 0;
-	for (int i = 0, j = str_len - 1; i < str_len; i++, j--) {
-		val += (str[i] - '0') * pow(10, j);
-		// uart::getInstance()->Transmit('\n'); //Echo what is sent to the device	
-		// uart::getInstance()->Transmit(str[i] - '0'); //Echo what is sent to the device	
-		// uart::getInstance()->TransmitString(" --- "); //Echo what is sent to the device	
-		// uart::getInstance()->Transmit(val); //Echo what is sent to the device	
-	}
-	return round(val);
-}
-
-static uint8_t stringToUint8(char* str, uint8_t str_len) {
-	return (uint8_t)stringToUint16(str, str_len);
-}
 

@@ -134,7 +134,6 @@ class climateControl : public uartCallback{
 		void setFanHardware();
 		void setLampHardware(uint8_t lamp_id);
 		void setWaterPumpHardware();
-		static uint16_t stringToUint16(char* str, uint8_t str_len);
 
 };
 
