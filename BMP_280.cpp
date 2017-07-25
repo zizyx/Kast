@@ -58,13 +58,13 @@ void BMP_280::TempCalc(void) {
 uint32_t BMP_280::ReadPressure(){
 	ReadPressureRegisters();
 	PressureCalc();
+	
 	return bmp280_data.calculated_pressure;
 }
 
 uint8_t BMP_280::ReadPressureRound() {
 	return (uint8_t)(ReadPressure() / 100);
 }
-
 
 void BMP_280::ReadPressureRegisters(){
 	I2C->WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);	

@@ -49,6 +49,10 @@
 #define CMD_GET_TEMP_ARG_LEN 1
 #define CMD_GET_TEMP_LEN (9 + CMD_GET_TEMP_ARG_LEN)
 
+#define CMD_GET_PRESS "get_press_"
+#define CMD_GET_PRESS_ARG_LEN 1
+#define CMD_GET_PRESS_LEN (10 + CMD_GET_PRESS_ARG_LEN)
+
 #define CMD_GET_CLOCK "get_clock"
 #define CMD_GET_CLOCK_LEN 9
 

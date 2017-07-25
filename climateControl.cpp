@@ -260,11 +260,28 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
 		CMD_GET_TEMP_LEN, cmdLength)) {
-
+		uint8_t temp = 0;
 		uart::getInstance()->TransmitString("\nCMD_GET_TEMP_");
-		uint8_t temp = getInstance()->baro_inside.ReadTemperatureRound();
-//		uint8_t temp = getInstance()->getTemperature(INSIDE_BAROMETER_ID); // <-- Deze fuckst
+		if(cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
+			temp = getInstance()->baro_inside.ReadTemperatureRound();
+			// uint8_t temp = getInstance()->getTemperature(INSIDE_BAROMETER_ID); // <-- Deze fuckst
+		}else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
+			temp = getInstance()->baro_outside.ReadTemperatureRound();
+		}else {
+			return;
+		}
 		uart::getInstance()->Transmit(temp);
+	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
+		CMD_GET_PRESS_LEN, cmdLength)) {
+		uart::getInstance()->TransmitString("\nCMD_GET_PRESS_");
+		if(cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
+			sprintf(string, "pressure is %ld\n", getInstance()->baro_inside.ReadPressure());
+		}else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
+			sprintf(string, "pressure is %ld\n", getInstance()->baro_outside.ReadPressure());
+		}else {
+			return;
+		}
+		uart::getInstance()->TransmitString(string);
 	}
 	getInstance()->updateHardware();
 }
