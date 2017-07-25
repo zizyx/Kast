@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# bullshit
+*.lst
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.sym
