@@ -76,7 +76,7 @@ TARGET = main
 # Object files directory
 #     To put object files in current directory, use a dot (.), do NOT make
 #     this an empty or blank macro!
-OBJDIR = .
+OBJDIR = build
 
 
 # List C source files here. (C dependencies are automatically generated.)
@@ -183,6 +183,7 @@ CPPFLAGS += -fpack-struct
 CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
 CPPFLAGS += -Wall
+CPPFLAGS += -Werror
 CPPFLAGS += -Wundef
 #CPPFLAGS += -mshort-calls
 #CPPFLAGS += -fno-unit-at-a-time

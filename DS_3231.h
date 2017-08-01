@@ -81,7 +81,8 @@
 
 #define DS_3231_SET_YEAR(year) ( ( ((year % 10) << DS_3231_YEAR_POSITION) & DS_3231_YEAR_MASK) | \
 											( ( ( (year % 100 - (year % 10)) / 10)  << DS_3231_TEN_YEAR_POSITION) & DS_3231_TEN_YEAR_MASK) )
-
+class i2c;
+class uart;
 
 struct DS3231_data {
 	// Register values
@@ -100,13 +101,14 @@ struct DS3231_data {
 class DS_3231 {
 	public:
 		DS_3231(void);
+		static DS_3231 *getInstance();
 		uint16_t ReadTemperature();
 		void getTimeVarsAsString(char *string);
 		datetime_t getCurrentTime();
 		void testing(char* string);
-		static DS_3231 *getInstance();
 		void setTime(datetime_t datetime);
 	private:
+		static DS_3231 instance;
 		i2c *I2C;
 		uart *debug;
 

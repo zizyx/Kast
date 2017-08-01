@@ -3,17 +3,14 @@
 /////////////////////////////////////////////////////////////////////////////////
 #include "pdm.h"
 
-pdm *pdm::instance = NULL;
+pdm instance = pdm();
 
 pdm::pdm(){
 
 }
 
 pdm *pdm::getInstance(){
-	if (instance == NULL) {
-		instance = &pdm();
-	}
-	return instance;	
+	return &instance;	
 }
 
 //Choose any pin from port b
@@ -42,7 +39,7 @@ void pdm::setupPinTimer(){
 	TCCR2B |= (1 << CS20) | (1 << CS21) |(1 << CS22);
 
 //Output compare register
-	OCR2A =	0x255;
+	OCR2A =	255;
 }
 
 void pdm::setPdm(uint8_t pdm){

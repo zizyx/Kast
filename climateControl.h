@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include "plants.h"
 #include "i2c.h"
-#include "uartCallback.h"
+#include "uart.h"
 #include "pdm.h" 
 #include "DS_3231.h"
 #include "BMP_280.h"
@@ -75,13 +75,16 @@
 #define CLOCK_MONTH_OFFSET_LEN  2
 #define CLOCK_YEAR_OFFSET_LEN  4
 
+class DS_3231;
+class uart;
+class BMP_280;
 
 struct climateVars {
 	uint32_t 		inside_temp;
 	uint32_t 		outside_temp;
 
-	int64_t 		inside_pressure;
-	int64_t 		outside_pressure;
+	uint64_t 		inside_pressure;
+	uint64_t 		outside_pressure;
 
 	bool 			fan_status;
 	uint8_t 		fan_pwm_level;
@@ -99,8 +102,8 @@ struct climateVars {
 
 class climateControl : public uartCallback{
 	public:
-		static climateControl *getInstance();
-		static void handleCmd(char *cmd, uint8_t cmdLength);
+		void handleCmd(char *cmd, uint8_t cmdLength);
+		climateControl(void);
 		void checkClimate();
 	    // The callback function that Caller will call.
 //	    int cbiCallbackFunction(int i);
@@ -110,7 +113,6 @@ class climateControl : public uartCallback{
 		}*/
 
 	private:
-		static climateControl *instance;
 		i2c *I2C;
 		pdm *Pdm;
 		DS_3231 *clock;
@@ -118,7 +120,6 @@ class climateControl : public uartCallback{
 		BMP_280 baro_outside;
 		uart *uartHandler;
 
-		climateControl(void);
 		struct climateVars vars;
 		bool isClimateSafetyActive();
 		void updateClimateVars();

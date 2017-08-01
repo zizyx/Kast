@@ -47,7 +47,7 @@ class adc {
 		uint16_t readAdc();
 
 	private:
-		static adc *instance;
+		static adc instance;
 		adc(void);
 		void Init(void);
 		uint8_t readAdcLow();

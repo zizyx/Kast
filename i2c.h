@@ -10,8 +10,11 @@
 #include "uart.h"
 #include <stdlib.h>
 
+class uart;
+
 class i2c{
 	public:
+		i2c(void);
 		static i2c *getInstance();
 		void WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData);
 		uint8_t ReadRegisteru8(uint8_t address, uint8_t reg);
@@ -22,9 +25,7 @@ class i2c{
 		void ReadRegisterFlow(uint8_t address, uint8_t reg, uint8_t cnt, uint8_t *buffer);
 
 	private:
-		static i2c *instance;
-		
-		i2c(void);
+		static i2c instance;
 		uart *debug;
 		void Init(void);
 		void SendByte(uint8_t data);

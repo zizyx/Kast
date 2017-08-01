@@ -25,15 +25,15 @@ int main(){
 	DS_3231 *clock;
 	uart *debug;
 	adc *Adc;
-	climateControl *Climate;
+	climateControl cctl;
 
-	char string[81] = {"e\n\0"};
+	// char string[81] = {"e\n\0"};
 
 	debug = uart::getInstance();
 	Adc = adc::getInstance();
 	clock = DS_3231::getInstance();
 	Pdm = pdm::getInstance();
-	Climate = climateControl::getInstance();
+
 
 	// testing uart
 	Pdm->setupFanPin(FAN_PIN); // PIN 11
@@ -51,7 +51,7 @@ int main(){
 		// debug->TransmitString(string);
 		// _delay_ms(1000); 
 
-		debug->checkBuffer();
+		debug->checkBuffer(&cctl);
 		// debug->TransmitString(clock->getCurrentTime().toString());
 		// debug->TransmitString("\n\0");
 

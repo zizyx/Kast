@@ -1,7 +1,7 @@
 #include "adc.h"
 
 //Singleton
-adc *adc::instance = NULL;
+adc adc::instance = adc();
 
 adc::adc(void) {
 	Init();
@@ -18,11 +18,7 @@ void adc::Init(void) {
 }
 
 adc *adc::getInstance() {
-	if (instance == NULL) {
-		instance = &adc();
-	}
-
-	return instance;
+	return &instance;
 }
 
 void adc::setVoltageReference(uint8_t setting){

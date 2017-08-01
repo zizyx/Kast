@@ -1,16 +1,7 @@
 #include "climateControl.h"
 #include <math.h>
 
-climateControl *climateControl::instance = NULL;
-
-climateControl *climateControl::getInstance(){
-	if (instance == NULL) {
-		instance = &climateControl();
-	} 
-	return instance; 	
-}
-
-static uint16_t stringToUint16(char* str, uint8_t str_len) {
+uint16_t stringToUint16(char* str, uint8_t str_len) {
 	double val = 0;
 	for (int i = 0, j = str_len - 1; i < str_len; i++, j--) {
 		val += (str[i] - '0') * pow(10, j);
@@ -22,14 +13,15 @@ static uint16_t stringToUint16(char* str, uint8_t str_len) {
 	return round(val);
 }
 
-static uint8_t stringToUint8(char* str, uint8_t str_len) {
-	return (uint8_t)stringToUint16(str, str_len);
-}
+// uint8_t stringToUint8(char* str, uint8_t str_len) {
+// 	return (uint8_t)stringToUint16(str, str_len);
+// }
 
+ 	// baro_inside BMP_280((uint8_t)BMP280_ADDRESS_INSIDE);
+ 	// baro_outside BMP_280((uint8_t)BMP280_ADDRESS_OUTSIDE);
 
 climateControl::climateControl() 
-: baro_inside(BMP280_ADDRESS_INSIDE) , baro_outside(BMP280_ADDRESS_OUTSIDE)
- {
+: baro_inside(BMP280_ADDRESS_INSIDE), baro_outside(BMP280_ADDRESS_OUTSIDE) {
 	setPlantToGrow(KUSH);
 	// uartHandler = uart::getInstance();
 	clock = DS_3231::getInstance();
@@ -111,7 +103,7 @@ void climateControl::setFanState(uint8_t status, uint8_t pwm) {
 	}
 
 	vars.fan_pwm_level = pwm;
-	uart::getInstance()->TransmitString("setFanState");
+	DEBUG_STR("setFanState");
 	uart::getInstance()->Transmit(vars.fan_pwm_level);
 }
 
@@ -184,8 +176,8 @@ void climateControl::updateHardware() {
 }
 
 void climateControl::setFanHardware() {
-	uartHandler->TransmitString("setFanHardware ");
-	uartHandler->Transmit(vars.fan_pwm_level);
+	PRINT_STR(uartHandler, "setFanHardware ");
+	DEBUG_STR(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
 		Pdm->setPdm(vars.fan_pwm_level);
 	}else if (vars.fan_status == FAN_OFF){
@@ -204,7 +196,7 @@ void climateControl::setWaterPumpHardware() {
 
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	char string[81] = {"e\n\0"};
-	uart::getInstance()->TransmitString(cmd);
+	DEBUG_STR(cmd);
 
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
@@ -214,14 +206,14 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	// CMD fan_on;
 	////////////////////////////////////////////////////////////////////////////////////
 	if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
-		uart::getInstance()->TransmitString("\nCMD_FAN_ON ");
-	 	getInstance()->setFanState(FAN_ON); //Cool that plant. max	
+		DEBUG_STR("\nCMD_FAN_ON ");
+	 	setFanState(FAN_ON); //Cool that plant. max	
 	} 
 	// CMD fan_off;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
-		uart::getInstance()->TransmitString("\nCMD_FAN_OFF ");
-	 	getInstance()->setFanState(FAN_OFF); //Cool that plant. max	
+		DEBUG_STR("\nCMD_FAN_OFF ");
+	 	setFanState(FAN_OFF); //Cool that plant. max	
 	} 
 	// CMD Fan_lvl_xxx;
 	////////////////////////////////////////////////////////////////////////////////////
@@ -231,20 +223,20 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		uint8_t fan_pwm_level = 0;
 		fan_pwm_level = stringToUint16(cmd + (CMD_FAN_LVL_LEN - CMD_FAN_LVL_ARG_LEN), CMD_FAN_LVL_ARG_LEN);
 
-		uart::getInstance()->TransmitString("\nCMD_FAN_LVL_ ");
+		DEBUG_STR("\nCMD_FAN_LVL_ ");
 		uart::getInstance()->Transmit(fan_pwm_level);
-	 	getInstance()->setFanState(FAN_ON, fan_pwm_level);
+	 	setFanState(FAN_ON, fan_pwm_level);
 	} 
 	// CMD get_clock;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
-		uart::getInstance()->TransmitString("\nCMD_GET_CLOCK ");
-		uart::getInstance()->TransmitString(getInstance()->clock->getCurrentTime().toString());
+		DEBUG_STR("\nCMD_GET_CLOCK ");
+		DEBUG_STR(clock->getCurrentTime().toString());
 	} 
 	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
-		uart::getInstance()->TransmitString("\nCMD_SET_CLOCK ");
+		DEBUG_STR("\nCMD_SET_CLOCK ");
 
 		datetime_t datetime = datetime_t(
 			(uint8_t)stringToUint16(cmd + (CLOCK_SECOND_OFFSET), CLOCK_SECOND_OFFSET_LEN),
@@ -254,36 +246,36 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			(uint8_t)stringToUint16(cmd + (CLOCK_DATE_OFFSET), CLOCK_DATE_OFFSET_LEN),
 			(uint8_t)stringToUint16(cmd + (CLOCK_MONTH_OFFSET), CLOCK_MONTH_OFFSET_LEN),
 			stringToUint16(cmd + (CLOCK_YEAR_OFFSET), CLOCK_YEAR_OFFSET_LEN));
-		getInstance()->clock->setTime(datetime);
+		clock->setTime(datetime);
 	} 
 	// CMD get_temp;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
 		CMD_GET_TEMP_LEN, cmdLength)) {
-		uint8_t temp = 0;
-		uart::getInstance()->TransmitString("\nCMD_GET_TEMP_");
+		uint8_t temp = 0; 
+		DEBUG_STR("\nCMD_GET_TEMP_");
 		if(cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
-			temp = getInstance()->baro_inside.ReadTemperatureRound();
+			temp = baro_inside.ReadTemperatureRound();
 			// uint8_t temp = getInstance()->getTemperature(INSIDE_BAROMETER_ID); // <-- Deze fuckst
 		}else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
-			temp = getInstance()->baro_outside.ReadTemperatureRound();
+			temp = baro_outside.ReadTemperatureRound();
 		}else {
 			return;
 		}
 		uart::getInstance()->Transmit(temp);
 	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
 		CMD_GET_PRESS_LEN, cmdLength)) {
-		uart::getInstance()->TransmitString("\nCMD_GET_PRESS_");
+		DEBUG_STR("\nCMD_GET_PRESS_");
 		if(cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
-			sprintf(string, "pressure is %ld\n", getInstance()->baro_inside.ReadPressure());
+			sprintf(string, "pressure is %ld\n", baro_inside.ReadPressure());
 		}else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
-			sprintf(string, "pressure is %ld\n", getInstance()->baro_outside.ReadPressure());
+			sprintf(string, "pressure is %ld\n", baro_outside.ReadPressure());
 		}else {
 			return;
 		}
-		uart::getInstance()->TransmitString(string);
+		DEBUG_STR(string);
 	}
-	getInstance()->updateHardware();
+	updateHardware();
 }
 
 
