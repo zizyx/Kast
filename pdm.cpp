@@ -6,7 +6,8 @@
 pdm instance = pdm();
 
 pdm::pdm(){
-
+	setupPinTimer();
+	setPdm(255);
 }
 
 pdm *pdm::getInstance(){
@@ -19,7 +20,6 @@ void pdm::setupFanPin(uint8_t pinNr){
 	PORTB |= (PULL_UP << pinNr);
 	// PINB |= HIGH << pinNr;
 }
-
 
 void pdm::setupPinTimer(){
 	TCCR2A = 0x00;
@@ -41,6 +41,7 @@ void pdm::setupPinTimer(){
 //Output compare register
 	OCR2A =	255;
 }
+
 
 void pdm::setPdm(uint8_t pdm){
 	//Output compare register

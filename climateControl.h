@@ -2,14 +2,14 @@
 #define CLIMATE_CONTROL_H
 
 #include <inttypes.h>
+
 #include "plants.h"
-#include "i2c.h"
 #include "uart.h"
 #include "pdm.h" 
 #include "DS_3231.h"
 #include "BMP_280.h"
 #include "datetime.h"
-#include <math.h>
+#include "board.h"
 
 #define FAN_ON 1
 #define FAN_OFF 0
@@ -96,24 +96,16 @@ struct climateVars {
 	bool 			water_pump_time;
 
 	uint16_t 		humidity;
-	struct plants	selected_plant;
+	// struct plant	selected_plant;
 };
 
-
-class climateControl : public uartCallback{
+class climateControl {
 	public:
 		void handleCmd(char *cmd, uint8_t cmdLength);
 		climateControl(void);
 		void checkClimate();
-	    // The callback function that Caller will call.
-//	    int cbiCallbackFunction(int i);
-		int cbiCallbackFunction(char*, int length);/* {
-		//	TransmitString("10,");
-	   		return 2 * i; 
-		}*/
 
 	private:
-		i2c *I2C;
 		pdm *Pdm;
 		DS_3231 *clock;
 		BMP_280 baro_inside;
@@ -139,7 +131,6 @@ class climateControl : public uartCallback{
 		void setFanHardware();
 		void setLampHardware(uint8_t lamp_id);
 		void setWaterPumpHardware();
-
 };
 
 #endif

@@ -8,7 +8,6 @@ i2c i2c::instance = i2c();
 
 i2c::i2c() {
 	Init();
-	debug = uart::getInstance();
 }
 
 i2c *i2c::getInstance(){
@@ -203,9 +202,8 @@ void i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData
 
 	//CHECK IF SENDING ADDRESS FAILED
 	while ((TWSR & 0xF8) != MT_SLA_ACK){
-		PRINT_STR(debug, "No ack received (I2C) implement timeout\n");
+		// PRINT_STR(debug, "No ack received (I2C) implement timeout\n");
 	}
-	
 		
 	SendByte(reg);
 

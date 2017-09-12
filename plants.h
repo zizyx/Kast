@@ -3,10 +3,12 @@
 
 #include <inttypes.h>
 
-#define KUSH 0
-#define NORTHERN_LIGHTS 1
+#define NO_PLANT 0
+#define KUSH 1
+#define NORTHERN_LIGHTS 2
 
-struct plants {
+
+struct plant{
 	uint8_t plant_id;
 	uint8_t max_temp;
 	uint8_t min_temp;
@@ -18,30 +20,8 @@ struct plants {
 	uint8_t watering_cooldown; //Hours, Some plants need the ground to become dry after watering.
 };
 
-/*
-struct plants plant_list[] = {
-	{
-		KUSH, //plant_id
-		50, //max_temp
-		5, //min_temp
-		10, //min_humidity
-		100, //max_humidity
-		5, //lamp_one_time
-		5, //lamp_off_time
-		90, //grow_time
-		10, //watering_cooldown
-	},	
-	{
-		NORTHERN_LIGHTS, //plant_id
-		50, //max_temp
-		5, //min_temp
-		10, //min_humidity
-		100, //max_humidity
-		5, //lamp_one_time
-		5, //lamp_off_time
-		90, //grow_time
-		10, //watering_cooldown
-	},
-};
-*/
+#define NR_OF_PLANTS 2
+
+extern struct plant plants[NR_OF_PLANTS];
+
 #endif

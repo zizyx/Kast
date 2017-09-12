@@ -7,10 +7,7 @@
 
 #include <inttypes.h>
 #include <avr/io.h>
-#include "uart.h"
 #include <stdlib.h>
-
-class uart;
 
 class i2c{
 	public:
@@ -26,7 +23,6 @@ class i2c{
 
 	private:
 		static i2c instance;
-		uart *debug;
 		void Init(void);
 		void SendByte(uint8_t data);
 		void SendStopBit(void);

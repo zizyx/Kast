@@ -22,19 +22,37 @@ uint16_t stringToUint16(char* str, uint8_t str_len) {
 
 climateControl::climateControl() 
 : baro_inside(BMP280_ADDRESS_INSIDE), baro_outside(BMP280_ADDRESS_OUTSIDE) {
-	setPlantToGrow(KUSH);
-	// uartHandler = uart::getInstance();
+//	setPlantToGrow(KUSH);
 	clock = DS_3231::getInstance();
-	// baro_inside = BMP_280::BMP_280(BMP280_ADRESS_INSIDE);
-	// baro_outside = BMP_280::BMP_280(BMP280_ADRESS_OUTSIDE);
-}
 
-int climateControl::cbiCallbackFunction(char* string, int length) {
-	// uartHandler->TransmitString(string);
-	handleCmd(string, length);
-    return 1; //For checking if the handler is valid.
-}
+	vars.inside_temp = 0;
+	vars.outside_temp = 0;
 
+	vars.inside_pressure = 0;
+	vars.outside_pressure = 0;
+
+	vars.fan_status = FAN_ON;
+	vars.fan_pwm_level = 0;
+
+	vars.lamp_status[LAMPS] = LAMP_OFF;
+	vars.lamp_time[LAMPS] = LAMP_OFF;
+
+	vars.water_pump_status = WATER_PUMP_OFF;
+	vars.water_pump_time = 0;
+
+	vars.humidity = 0;
+
+	Pdm = pdm::getInstance();
+	Pdm->setupFanPin(FAN_PIN);
+	Pdm->setupPinTimer();
+	Pdm->setPdm(255);
+
+
+
+	updateHardware();
+
+//	vars.selected_plant = plants[NO_PLANT];
+}
 
 void climateControl::checkClimate() {
 	//Update climate vars from sensors.
@@ -51,24 +69,24 @@ void climateControl::checkClimate() {
 
 bool climateControl::isClimateSafetyActive() {
 	bool active = false;
-	if ( vars.inside_temp >= vars.selected_plant.max_temp ) {
-		active = true;
-		vars.lamp_status[LAMP_ONE] = LAMP_OFF;
-		vars.lamp_status[LAMP_TWO] = LAMP_OFF;	
-		setLampState(LAMP_ONE, LAMP_OFF);
-		setLampState(LAMP_TWO, LAMP_OFF);
-		setFanState(FAN_ON, MAX_FAN_PWM); //Cool that plant. max
-	}
+	// if ( vars.inside_temp >= vars.selected_plant.max_temp ) {
+	// 	active = true;
+	// 	vars.lamp_status[LAMP_ONE] = LAMP_OFF;
+	// 	vars.lamp_status[LAMP_TWO] = LAMP_OFF;	
+	// 	setLampState(LAMP_ONE, LAMP_OFF);
+	// 	setLampState(LAMP_TWO, LAMP_OFF);
+	// 	setFanState(FAN_ON, MAX_FAN_PWM); //Cool that plant. max
+	// }
 
-	if ( vars.humidity >= vars.selected_plant.max_humidity ) {
-		active = true;
-		setWaterPumpState(WATER_PUMP_OFF);
-	}
+	// if ( vars.humidity >= vars.selected_plant.max_humidity ) {
+	// 	active = true;
+	// 	setWaterPumpState(WATER_PUMP_OFF);
+	// }
 
-	if ( vars.inside_pressure >= ( vars.inside_pressure + (UPPER_PRESSURE_TOLERANCE * 2) ) ) {
-		active = true;
-		setFanState(FAN_OFF, 0);
-	}
+	// if ( vars.inside_pressure >= ( vars.inside_pressure + (UPPER_PRESSURE_TOLERANCE * 2) ) ) {
+	// 	active = true;
+	// 	setFanState(FAN_OFF, 0);
+	// }
 
 	return active;
 }
@@ -169,6 +187,7 @@ void climateControl::setPlantToGrow(uint16_t plant_id) {
 
 //HARDWARE setters
 void climateControl::updateHardware() {
+	PRINT_STR(uartHandler, "update hardware");
 	setFanHardware();
 	setLampHardware(LAMP_ONE);
 	setLampHardware(LAMP_TWO);
@@ -176,8 +195,8 @@ void climateControl::updateHardware() {
 }
 
 void climateControl::setFanHardware() {
-	PRINT_STR(uartHandler, "setFanHardware ");
-	DEBUG_STR(vars.fan_pwm_level);
+	// PRINT_STR(uartHandler, "setFanHardware ");
+	// DEBUG_STR(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
 		Pdm->setPdm(vars.fan_pwm_level);
 	}else if (vars.fan_status == FAN_OFF){
@@ -196,24 +215,24 @@ void climateControl::setWaterPumpHardware() {
 
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	char string[81] = {"e\n\0"};
-	DEBUG_STR(cmd);
+//	DEBUG_STR(cmd);
 
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
-		uart::getInstance()->Transmit(cmd[i]); //Echo what is sent to the device	
+//		uart::getInstance()->Transmit(cmd[i]); //Echo what is sent to the device	
 	}
 
 	// CMD fan_on;
 	////////////////////////////////////////////////////////////////////////////////////
 	if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
-		DEBUG_STR("\nCMD_FAN_ON ");
-	 	setFanState(FAN_ON); //Cool that plant. max	
+		sprintf(string, "Turning fan on.\n");
+	 	setFanState(FAN_ON);
 	} 
 	// CMD fan_off;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
-		DEBUG_STR("\nCMD_FAN_OFF ");
-	 	setFanState(FAN_OFF); //Cool that plant. max	
+		sprintf(string, "Turning off fan.\n");
+	 	setFanState(FAN_OFF);
 	} 
 	// CMD Fan_lvl_xxx;
 	////////////////////////////////////////////////////////////////////////////////////
@@ -223,21 +242,12 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		uint8_t fan_pwm_level = 0;
 		fan_pwm_level = stringToUint16(cmd + (CMD_FAN_LVL_LEN - CMD_FAN_LVL_ARG_LEN), CMD_FAN_LVL_ARG_LEN);
 
-		DEBUG_STR("\nCMD_FAN_LVL_ ");
-		uart::getInstance()->Transmit(fan_pwm_level);
+		sprintf(string, "Updating fan lvl to %d\n", fan_pwm_level);
 	 	setFanState(FAN_ON, fan_pwm_level);
-	} 
-	// CMD get_clock;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
-		DEBUG_STR("\nCMD_GET_CLOCK ");
-		DEBUG_STR(clock->getCurrentTime().toString());
 	} 
 	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
-		DEBUG_STR("\nCMD_SET_CLOCK ");
-
 		datetime_t datetime = datetime_t(
 			(uint8_t)stringToUint16(cmd + (CLOCK_SECOND_OFFSET), CLOCK_SECOND_OFFSET_LEN),
 			(uint8_t)stringToUint16(cmd + (CLOCK_MINUTE_OFFSET), CLOCK_MINUTE_OFFSET_LEN),
@@ -247,34 +257,35 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			(uint8_t)stringToUint16(cmd + (CLOCK_MONTH_OFFSET), CLOCK_MONTH_OFFSET_LEN),
 			stringToUint16(cmd + (CLOCK_YEAR_OFFSET), CLOCK_YEAR_OFFSET_LEN));
 		clock->setTime(datetime);
+		sprintf(string, "Updated datetime to %s\n", clock->getCurrentTime().toString());
+	} 
+	// CMD get_clock;
+	////////////////////////////////////////////////////////////////////////////////////
+	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
+		sprintf(string, "Current datetime is %s\n", clock->getCurrentTime().toString());
 	} 
 	// CMD get_temp;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
 		CMD_GET_TEMP_LEN, cmdLength)) {
-		uint8_t temp = 0; 
-		DEBUG_STR("\nCMD_GET_TEMP_");
 		if(cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
-			temp = baro_inside.ReadTemperatureRound();
-			// uint8_t temp = getInstance()->getTemperature(INSIDE_BAROMETER_ID); // <-- Deze fuckst
+			sprintf(string, "temp is %d\n", baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
 		}else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
-			temp = baro_outside.ReadTemperatureRound();
+			sprintf(string, "temp is %d\n", baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
 		}else {
 			return;
 		}
-		uart::getInstance()->Transmit(temp);
 	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
 		CMD_GET_PRESS_LEN, cmdLength)) {
-		DEBUG_STR("\nCMD_GET_PRESS_");
 		if(cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
-			sprintf(string, "pressure is %ld\n", baro_inside.ReadPressure());
+			sprintf(string, "pressure is %ld Pascal\n", baro_inside.ReadPressure()); //Deze is weer genaaid
 		}else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
-			sprintf(string, "pressure is %ld\n", baro_outside.ReadPressure());
+			sprintf(string, "pressure is %ld Pascal\n", baro_outside.ReadPressure()); //Deze is weer genaaid
 		}else {
 			return;
 		}
-		DEBUG_STR(string);
 	}
+	PRINT_STR(uartHandler, string);
 	updateHardware();
 }
 

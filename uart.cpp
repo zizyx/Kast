@@ -56,16 +56,9 @@ void uart::TransmitString(char string[]){
 
 void uart::checkBuffer(climateControl *cctl)
 {
-
 	for(uint8_t i = 0; i < bufferLength; i++){
 		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data
 			cctl->handleCmd(rxBuffer, i);
-//			climateControl.getInstance().handleCmd(rxBuffer, bufferLength-1); //Subtract flush bit
-			// TransmitString("1,");
-			// if(m_cb->cbiCallbackFunction("255", 3)){
-			// 	// TransmitString("2,");				
-			// 	m_cb->cbiCallbackFunction(rxBuffer, i);
-			// }
 			bufferLength = 0;
 		}
 	}

@@ -10,7 +10,7 @@
 #include <avr/io.h>
 #include <string.h>
 #include <avr/interrupt.h>
-#include "uartCallback.h"
+
 #include "climateControl.h"
 
 #define PRINT_STR(o, x)	(o->print((char *) x))
@@ -35,14 +35,8 @@ class uart {
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength);
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength, uint8_t equalLength);
 
-	    // void connectCallback(uartCallback *cb)
-	    // {
-	    //     m_cb = cb;
-	    // }
-
 	private:
 		static uart instance;
-    	// uartCallback *m_cb;
 		void Init(uint16_t baudrate);
 };
 

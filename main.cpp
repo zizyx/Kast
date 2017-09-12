@@ -1,46 +1,40 @@
 #include <util/delay.h>
-#include "BMP_280.h"
+#include <String.h>
+#include <stdio.h>
+#include <avr/interrupt.h>
+//#include "BMP_280.h"
 #include "DS_3231.h"
 #include "uart.h"
 #include "adc.h"
-#include <String.h>
-#include <stdio.h>
 #include "pdm.h"
-#include <avr/interrupt.h>
 #include "climateControl.h"
 #include "board.h"
 
-//TO DO:
-// PDM
-extern "C" void __cxa_pure_virtual()
-{
-	while (1);
-}
+// extern "C" void __cxa_pure_virtual()
+// {
+// 	while (1);
+// }
 
 int main(){
 
-	pdm *Pdm;
-	BMP_280 baro_inside(0x76);
-	BMP_280 baro_outside(0x77);
-	DS_3231 *clock;
+	// pdm *Pdm;
+	// DS_3231 *clock;
 	uart *debug;
-	adc *Adc;
+	// adc *Adc;
 	climateControl cctl;
+
+	cctl = climateControl();
 
 	// char string[81] = {"e\n\0"};
 
 	debug = uart::getInstance();
-	Adc = adc::getInstance();
-	clock = DS_3231::getInstance();
-	Pdm = pdm::getInstance();
-
+	// Adc = adc::getInstance();
+	// clock = DS_3231::getInstance();
+	// Pdm = pdm::getInstance();
 
 	// testing uart
-	Pdm->setupFanPin(FAN_PIN); // PIN 11
-	Pdm->setupPinTimer();
-	Pdm->setPdm(255);
-	debug->TransmitString((char *)"Hallo!\n");
-
+	// Pdm->setupFanPin(FAN_PIN); // PIN 11
+	// debug->TransmitString((char *)"Hallo!\n");
 
 	// datetime_t new_dt = datetime_t(22, 22, 2, 2, 20, 2, 2022);
 	// clock->setTime(new_dt);
