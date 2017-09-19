@@ -13,16 +13,10 @@ uint16_t stringToUint16(char* str, uint8_t str_len) {
 	return round(val);
 }
 
-// uint8_t stringToUint8(char* str, uint8_t str_len) {
-// 	return (uint8_t)stringToUint16(str, str_len);
-// }
-
- 	// baro_inside BMP_280((uint8_t)BMP280_ADDRESS_INSIDE);
- 	// baro_outside BMP_280((uint8_t)BMP280_ADDRESS_OUTSIDE);
-
 climateControl::climateControl() 
 : baro_inside(BMP280_ADDRESS_INSIDE), baro_outside(BMP280_ADDRESS_OUTSIDE) {
 //	setPlantToGrow(KUSH);
+	Adc = adc::getInstance();
 	clock = DS_3231::getInstance();
 
 	vars.inside_temp = 0;
@@ -47,11 +41,9 @@ climateControl::climateControl()
 	Pdm->setupPinTimer();
 	Pdm->setPdm(255);
 
-
-
 	updateHardware();
 
-//	vars.selected_plant = plants[NO_PLANT];
+	// vars.selected_plant = plants[NO_PLANT];
 }
 
 void climateControl::checkClimate() {
@@ -94,13 +86,13 @@ bool climateControl::isClimateSafetyActive() {
 
 //UPDATE
 void climateControl::updateClimateVars() {
-	vars.outside_pressure = getPressure(BMP280_ADDRESS_OUTSIDE);
-	vars.outside_temp = getTemperature(BMP280_ADDRESS_OUTSIDE);
+	// vars.outside_pressure = getPressure(BMP280_ADDRESS_OUTSIDE);
+	// vars.outside_temp = getTemperature(BMP280_ADDRESS_OUTSIDE);
 
-	vars.inside_pressure = getPressure(BMP280_ADDRESS_INSIDE);
-	vars.inside_temp = getTemperature(BMP280_ADDRESS_INSIDE);
+	// vars.inside_pressure = getPressure(BMP280_ADDRESS_INSIDE);
+	// vars.inside_temp = getTemperature(BMP280_ADDRESS_INSIDE);
 
-	vars.humidity = getHumidity();
+	// vars.humidity = getHumidity();
 }
 
 //Vars setters
@@ -130,28 +122,6 @@ void climateControl::setWaterPumpState(uint8_t status) {
 	vars.water_pump_time = 0; //Update timer value
 }
 
-//Vars getters
-int64_t climateControl::getPressure(uint8_t barometer_id) { 
-	// baro_inside.ReadPressure();
-	// baro_inside.ReadTemperatureRound();
-	//I2C
-	return 0;
-} 
-
-//Used for both pressure sensors
-uint8_t climateControl::getTemperature(char barometer_id) {
-	if (barometer_id == OUTSIDE_BAROMETER_ID)
-		return baro_outside.ReadTemperatureRound();
-	else /* OUTSIDE */
-		return baro_inside.ReadTemperatureRound();
-} 
-
-uint16_t climateControl::getHumidity() { 
-	//ADC
-	return 0;
-}
-
-
 //Calls functions which calculate and update climate vaiables
 void climateControl::calculateClimateVars() {
 	calculateFanPwmVars();
@@ -170,6 +140,18 @@ void climateControl::calculateFanPwmVars() {
 	} else {
 		//Pressure is within tolerances keep pwm settings.
 	}
+}
+
+uint16_t climateControl::getHumidity(){
+	Adc->setChannel(CHANNEL_ZERO);
+	Adc->startFirstConversion();
+	_delay_ms(100); 
+
+	// char string[81] = {"e\n\0"};
+	// sprintf(string, "Adc result is %d.\n", Adc->readAdc());	
+	// PRINT_STR(uartHandler, string);
+
+	return Adc->readAdc();
 }
 
 void climateControl::calculateLampVars(uint8_t lamp_id) {
@@ -219,7 +201,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
-//		uart::getInstance()->Transmit(cmd[i]); //Echo what is sent to the device	
+		// uart::getInstance()->Transmit(cmd[i]); //Echo what is sent to the device	
 	}
 
 	// CMD fan_on;
@@ -275,6 +257,8 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		}else {
 			return;
 		}
+	// CMD get_press;
+	////////////////////////////////////////////////////////////////////////////////////		
 	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
 		CMD_GET_PRESS_LEN, cmdLength)) {
 		if(cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
@@ -284,6 +268,13 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		}else {
 			return;
 		}
+	// CMD get_press;
+	////////////////////////////////////////////////////////////////////////////////////		
+	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
+		sprintf(string, "Humidity is %d.\n", getHumidity());
+		// Around 500+ is dry
+		// Fully wet is around 300-
+		// Test in ground to be sure
 	}
 	PRINT_STR(uartHandler, string);
 	updateHardware();

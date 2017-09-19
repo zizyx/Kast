@@ -10,6 +10,9 @@
 #include "BMP_280.h"
 #include "datetime.h"
 #include "board.h"
+#include "adc.h"
+#include <util/delay.h>
+
 
 #define FAN_ON 1
 #define FAN_OFF 0
@@ -36,6 +39,9 @@
 #define PWM_STEP 1
 
 //Uart messages
+#define CMD_GET_HUMID "get_humid"
+#define CMD_GET_HUMID_LEN 9
+
 #define CMD_FAN_ON "fan_on"
 #define CMD_FAN_ON_LEN 6
 #define CMD_FAN_OFF "fan_off"
@@ -111,6 +117,7 @@ class climateControl {
 		BMP_280 baro_inside;
 		BMP_280 baro_outside;
 		uart *uartHandler;
+		adc *Adc;
 
 		struct climateVars vars;
 		bool isClimateSafetyActive();
@@ -119,7 +126,6 @@ class climateControl {
 		void setFanState(uint8_t status, uint8_t pwm);
 		void setFanState(uint8_t status);
 		void setWaterPumpState(uint8_t status);
-		int64_t getPressure(uint8_t barometer_id);
 		uint8_t getTemperature(char barometer_id);
 		uint16_t getHumidity();
 		void calculateClimateVars();

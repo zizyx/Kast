@@ -11,8 +11,8 @@ void adc::Init(void) {
 	//16 	/128  125khz
 	setAdcPrescaler(DIVISION_FACTOR_128X);
 	setVoltageReference(AVCC);
-	setChannel(CHANNEL_ONE_V_ONE);
-	enableInterrupt();
+	// setChannel(CHANNEL_TEMPERATURE);
+	// enableInterrupt();
 	setAdjustResultDirection(RIGHT_ADJUST_RESULT); //Difficult, don't touch
 	enableAdc();
 }
