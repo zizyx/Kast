@@ -2,6 +2,7 @@
 #define PDM_H
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <inttypes.h>
 #include <string.h>
 
@@ -22,6 +23,7 @@ class pdm {
 		void setupPinTimer();
 		void setPdm(uint8_t pdm);
 	private:
+		static pdm instance;
 };
 
 #endif

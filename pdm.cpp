@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 #include "pdm.h"
 
-pdm instance = pdm();
+pdm pdm::instance = pdm();
 
 pdm::pdm(){
 	setupPinTimer();
@@ -50,9 +50,9 @@ void pdm::setPdm(uint8_t pdm){
 
 // ISR(TIMER2_OVF_vect){
 // 	OCR2A =	10;
-// 	// if(counter_direction) {
-// 	// 	OCR2A =	2;
-// 	// } else {
-// 	// 	OCR2A = 2;
-// 	// }
+// 	if(counter_direction) {
+// 		OCR2A =	2;
+// 	} else {
+// 		OCR2A = 2;
+// 	}
 // }

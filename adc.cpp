@@ -82,7 +82,6 @@ uint8_t adc::readAdcHigh() {
 	return ADCH;
 }
 
-
 void adc::setAdjustResultDirection(uint8_t mode) {
 	ADMUX &= ~(1 << ADLAR);
 	ADMUX |= (mode << ADLAR);

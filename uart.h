@@ -1,7 +1,8 @@
 #ifndef UART_H
 #define UART_H
 
-#define BAUD_RATE			103
+#define BAUD_9600			103
+#define BAUD_RATE			BAUD_9600
 #define FLUSH 				';'
 #define RX_BUFFER_SIZE 		50
 #define IS_CALLBACK_SET		"IS_CALLBACK_SET"

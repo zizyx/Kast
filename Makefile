@@ -85,7 +85,7 @@ SRC =
 #uart.cpp BMP_280.cpp climateControl.cpp DS_3231.cpp i2c.cpp lcd.cpp pwm.cpp spi.cpp
 
 # List C++ source files here. (C dependencies are automatically generated.)
-CPPSRC = $(TARGET).cpp adc.cpp BMP_280.cpp uart.cpp i2c.cpp DS_3231.cpp pdm.cpp climateControl.cpp plants.cpp
+CPPSRC = $(TARGET).cpp adc.cpp BMP_280.cpp uart.cpp i2c.cpp DS_3231.cpp pdm.cpp climateControl.cpp plants.cpp systemTimer.cpp
 
 # List Assembler source files here.
 #     Make them always end in a capital .S.  Files ending in a lowercase .s

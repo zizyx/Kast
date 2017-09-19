@@ -21,7 +21,7 @@ int main(){
 		// _delay_ms(1000); 
 		// sprintf(string, "Adc result is %d.\n", Adc->readAdc());	
 		// debug->TransmitString(string);
-		_delay_ms(1000); 
+		// _delay_ms(1);
 	}
 	return 0;
 }
