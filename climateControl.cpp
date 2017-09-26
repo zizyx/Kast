@@ -41,9 +41,18 @@ climateControl::climateControl()
 	Pdm->setupPinTimer();
 	Pdm->setPdm(255);
 
+	setupLampHardware();
+
 	updateHardware();
 
 	// vars.selected_plant = plants[NO_PLANT];
+}
+
+//Configure the pins as: output, no_pull, driven low
+void climateControl::setupLampHardware() {
+	DDRD |= (1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //Output
+	PORTD &= ~(1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //No_pull
+	PIND &= ~(1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //Drive low
 }
 
 void climateControl::checkClimate() {
@@ -63,10 +72,10 @@ bool climateControl::isClimateSafetyActive() {
 	bool active = false;
 	// if ( vars.inside_temp >= vars.selected_plant.max_temp ) {
 	// 	active = true;
-	// 	vars.lamp_status[LAMP_ONE] = LAMP_OFF;
-	// 	vars.lamp_status[LAMP_TWO] = LAMP_OFF;	
-	// 	setLampState(LAMP_ONE, LAMP_OFF);
-	// 	setLampState(LAMP_TWO, LAMP_OFF);
+	// 	vars.lamp_status[WARM_LAMP] = LAMP_OFF;
+	// 	vars.lamp_status[COLD_LAMP] = LAMP_OFF;	
+	// 	setLampState(WARM_LAMP, LAMP_OFF);
+	// 	setLampState(COLD_LAMP, LAMP_OFF);
 	// 	setFanState(FAN_ON, MAX_FAN_PWM); //Cool that plant. max
 	// }
 
@@ -125,8 +134,8 @@ void climateControl::setWaterPumpState(uint8_t status) {
 //Calls functions which calculate and update climate vaiables
 void climateControl::calculateClimateVars() {
 	calculateFanPwmVars();
-	calculateLampVars(LAMP_ONE);
-	calculateLampVars(LAMP_TWO);
+	calculateLampVars(WARM_LAMP);
+	calculateLampVars(COLD_LAMP);
 	calculateWaterPumpVars();
 }
 
@@ -155,8 +164,8 @@ uint16_t climateControl::getHumidity(){
 }
 
 void climateControl::calculateLampVars(uint8_t lamp_id) {
-	vars.lamp_status[LAMP_ONE] = LAMP_ON; //or off
-	vars.lamp_status[LAMP_TWO] = LAMP_ON; //or off
+	vars.lamp_status[WARM_LAMP] = LAMP_ON; //or off
+	vars.lamp_status[COLD_LAMP] = LAMP_ON; //or off
 }
 
 void climateControl::calculateWaterPumpVars() {
@@ -171,8 +180,7 @@ void climateControl::setPlantToGrow(uint16_t plant_id) {
 void climateControl::updateHardware() {
 	PRINT_STR(uartHandler, "update hardware");
 	setFanHardware();
-	setLampHardware(LAMP_ONE);
-	setLampHardware(LAMP_TWO);
+	setLampHardware();
 	setWaterPumpHardware();
 }
 
@@ -181,14 +189,16 @@ void climateControl::setFanHardware() {
 	// DEBUG_STR(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
 		Pdm->setPdm(vars.fan_pwm_level);
-	}else if (vars.fan_status == FAN_OFF){
+	} else if (vars.fan_status == FAN_OFF){
 		Pdm->setPdm(MIN_FAN_PWM);
 	}
 	//Zet pwm regs
 }
 
-void climateControl::setLampHardware(uint8_t lamp_id) {
-	// If lamp status changed update time. if not keep time.
+void climateControl::setLampHardware() {
+	PIND &= ~(1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //Drive low
+	PIND |= (vars.lamp_status[COLD_LAMP] << COLD_LAMP_PIN) | 
+		(vars.lamp_status[WARM_LAMP] << WARM_LAMP_PIN);	
 } 
 
 void climateControl::setWaterPumpHardware() {
@@ -250,32 +260,62 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
 		CMD_GET_TEMP_LEN, cmdLength)) {
-		if(cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
+		if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
 			sprintf(string, "temp is %d\n", baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
-		}else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
+		} else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
 			sprintf(string, "temp is %d\n", baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
-		}else {
+		} else {
 			return;
 		}
 	// CMD get_press;
 	////////////////////////////////////////////////////////////////////////////////////		
-	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
+	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
 		CMD_GET_PRESS_LEN, cmdLength)) {
-		if(cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
+		if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
 			sprintf(string, "pressure is %ld Pascal\n", baro_inside.ReadPressure()); //Deze is weer genaaid
-		}else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
+		} else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
 			sprintf(string, "pressure is %ld Pascal\n", baro_outside.ReadPressure()); //Deze is weer genaaid
-		}else {
+		} else {
 			return;
 		}
+
 	// CMD get_press;
 	////////////////////////////////////////////////////////////////////////////////////		
-	}else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
+	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
 		sprintf(string, "Humidity is %d.\n", getHumidity());
 		// Around 500+ is dry
 		// Fully wet is around 300-
 		// Test in ground to be sure
+
+	// CMD set_warm_lamp_;
+	////////////////////////////////////////////////////////////////////////////////////
+	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
+		CMD_SET_WARM_LAMP_LEN, cmdLength)) {
+		if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '0'){
+			sprintf(string, "Turning warm lamp off\n");
+			setLampState(WARM_LAMP, LAMP_OFF);
+		} else if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '1'){
+			sprintf(string, "Turning warm lamp on\n");
+			setLampState(WARM_LAMP, LAMP_ON);
+		} else {
+			return;
+		}
+
+	// CMD set_cold_lamp_;
+	////////////////////////////////////////////////////////////////////////////////////
+	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
+		CMD_SET_COLD_LAMP_LEN, cmdLength)) {
+		if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '0'){
+			sprintf(string, "Turning cold lamp off\n");
+			setLampState(COLD_LAMP, LAMP_OFF);
+		} else if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '1'){
+			sprintf(string, "Turning cold lamp on\n");
+			setLampState(COLD_LAMP, LAMP_ON);
+		} else {
+			return;
+		}
 	}
+
 	PRINT_STR(uartHandler, string);
 	updateHardware();
 }

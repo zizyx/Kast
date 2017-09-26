@@ -26,8 +26,8 @@
 #define BMP280_ADDRESS_INSIDE 			 	 ADDRESS_LOW
 #define BMP280_ADDRESS_OUTSIDE 				 ADDRESS_HIGH
 
-#define LAMP_ONE 0
-#define LAMP_TWO 1 //Pin nr
+#define WARM_LAMP 0
+#define COLD_LAMP 1 //Pin nr
 #define LAMPS 2
 
 #define UPPER_PRESSURE_TOLERANCE 10
@@ -58,6 +58,14 @@
 #define CMD_GET_PRESS "get_press_"
 #define CMD_GET_PRESS_ARG_LEN 1
 #define CMD_GET_PRESS_LEN (10 + CMD_GET_PRESS_ARG_LEN)
+
+#define CMD_SET_WARM_LAMP "set_warm_lamp_"
+#define CMD_SET_WARM_LAMP_ARG_LEN 1
+#define CMD_SET_WARM_LAMP_LEN (14 + CMD_SET_WARM_LAMP_ARG_LEN)
+
+#define CMD_SET_COLD_LAMP "set_cold_lamp_"
+#define CMD_SET_COLD_LAMP_ARG_LEN 1
+#define CMD_SET_COLD_LAMP_LEN (14 + CMD_SET_COLD_LAMP_ARG_LEN)
 
 #define CMD_GET_CLOCK "get_clock"
 #define CMD_GET_CLOCK_LEN 9
@@ -135,8 +143,9 @@ class climateControl {
 		void setPlantToGrow(uint16_t plant_id);
 		void updateHardware();
 		void setFanHardware();
-		void setLampHardware(uint8_t lamp_id);
 		void setWaterPumpHardware();
+		void setupLampHardware();
+		void setLampHardware();
 };
 
 #endif
