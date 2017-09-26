@@ -42,6 +42,7 @@ climateControl::climateControl()
 	Pdm->setPdm(255);
 
 	setupLampHardware();
+	setupWaterPumpHardware();
 
 	updateHardware();
 
@@ -53,6 +54,13 @@ void climateControl::setupLampHardware() {
 	DDRD |= (1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //Output
 	PORTD &= ~(1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //No_pull
 	PIND &= ~(1 << COLD_LAMP_PIN) | (1 << WARM_LAMP_PIN); //Drive low
+}
+
+//Configure the pins as: output, no_pull, driven low
+void climateControl::setupWaterPumpHardware() {
+	DDRD |= (1 << WATER_PUMP_PIN); //Output
+	PORTD &= ~(1 << WATER_PUMP_PIN); //No_pull
+	PIND &= ~(1 << WATER_PUMP_PIN); //Drive low
 }
 
 void climateControl::checkClimate() {
@@ -202,7 +210,9 @@ void climateControl::setLampHardware() {
 } 
 
 void climateControl::setWaterPumpHardware() {
-	// If waterpump status changed update time. if not keep time.
+	PINB &= ~(1 << WATER_PUMP_PIN); //Drive low
+	PINB |= (vars.water_pump_status << COLD_LAMP_PIN);
+	//Setup timeout timer.
 }
 
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
@@ -311,6 +321,20 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		} else if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '1'){
 			sprintf(string, "Turning cold lamp on\n");
 			setLampState(COLD_LAMP, LAMP_ON);
+		} else {
+			return;
+		}
+
+	// CMD set_water_pump_;
+	////////////////////////////////////////////////////////////////////////////////////
+	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
+		CMD_SET_WATER_PUMP_LEN, cmdLength)) {
+		if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '0'){
+			sprintf(string, "Turning water pump off\n");
+			setWaterPumpState(WATER_PUMP_OFF);
+		} else if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '1'){
+			sprintf(string, "Turning water pump on\n");
+			setWaterPumpState(WATER_PUMP_ON);
 		} else {
 			return;
 		}

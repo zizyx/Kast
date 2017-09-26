@@ -59,9 +59,13 @@
 #define CMD_GET_PRESS_ARG_LEN 1
 #define CMD_GET_PRESS_LEN (10 + CMD_GET_PRESS_ARG_LEN)
 
+#define CMD_SET_WATER_PUMP "set_water_pump_"
+#define CMD_SET_WATER_PUMP_ARG_LEN 1
+#define CMD_SET_WATER_PUMP_LEN (15 + CMD_SET_WATER_PUMP_ARG_LEN)
+
 #define CMD_SET_WARM_LAMP "set_warm_lamp_"
 #define CMD_SET_WARM_LAMP_ARG_LEN 1
-#define CMD_SET_WARM_LAMP_LEN (14 + CMD_SET_WARM_LAMP_ARG_LEN)
+#define CMD_SET_WARM_LAMP_LEN (15 + CMD_SET_WARM_LAMP_ARG_LEN)
 
 #define CMD_SET_COLD_LAMP "set_cold_lamp_"
 #define CMD_SET_COLD_LAMP_ARG_LEN 1
@@ -130,10 +134,12 @@ class climateControl {
 		struct climateVars vars;
 		bool isClimateSafetyActive();
 		void updateClimateVars();
+
 		void setLampState(uint8_t lamp_id, uint8_t status);
 		void setFanState(uint8_t status, uint8_t pwm);
 		void setFanState(uint8_t status);
 		void setWaterPumpState(uint8_t status);
+
 		uint8_t getTemperature(char barometer_id);
 		uint16_t getHumidity();
 		void calculateClimateVars();
@@ -142,10 +148,13 @@ class climateControl {
 		void calculateWaterPumpVars();
 		void setPlantToGrow(uint16_t plant_id);
 		void updateHardware();
+
 		void setFanHardware();
 		void setWaterPumpHardware();
-		void setupLampHardware();
 		void setLampHardware();
+
+		void setupWaterPumpHardware();
+		void setupLampHardware();
 };
 
 #endif
