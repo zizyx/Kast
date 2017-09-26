@@ -1,4 +1,10 @@
-Watchdog opnieuw implementeren
-Lampen aansturen
-Waterpomp
 Timers implementeren
+EEPROM. opslaan welke plant we groeien, start datum
+timeouts plaatsen waar nodig
+ - i2c
+ - waar die ook maar oneindig kan wachten.
+i2c reworken zodat deze werkt met interrupt.
+
+
+Watchdog opnieuw implementeren
+
