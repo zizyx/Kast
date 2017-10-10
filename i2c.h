@@ -11,7 +11,6 @@
 
 class i2c{
 	public:
-		i2c(void);
 		static i2c *getInstance();
 		void WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData);
 		uint8_t ReadRegisteru8(uint8_t address, uint8_t reg);
@@ -23,6 +22,8 @@ class i2c{
 
 	private:
 		static i2c instance;
+		
+		i2c(void);
 		void Init(void);
 		void SendByte(uint8_t data);
 		void SendStopBit(void);

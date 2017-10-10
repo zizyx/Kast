@@ -4,18 +4,24 @@
 #include "uart.h"
 #include "climateControl.h"
 #include "board.h"
+#include "systemTimer.h"
+#include "alarm.h"
 
 int main(){
 
-	uart *debug;
+	alarm alarms;
 	climateControl cctl;
-	cctl = climateControl();
-	debug = uart::getInstance();
-
+	uart *debug = uart::getInstance();
+	systemTimer *timer = systemTimer::getInstance();
 
 	while(1){
 		debug->checkBuffer(&cctl);
-		// //Starts conversion, result is done after 100ms?
+
+		timer->oncePerSecondTimer();
+		timer->oncePerTenSecondsTimer();
+
+		// cctl->checkClimate();
+		// Starts conversion, result is done after 100ms?
 		// Adc->setChannel(CHANNEL_ZERO);
 		// Adc->startFirstConversion();
 		// _delay_ms(1000); 

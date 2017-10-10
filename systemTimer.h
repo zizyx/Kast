@@ -5,6 +5,8 @@
 #include <avr/interrupt.h>
 #include <inttypes.h>
 #include <string.h>
+#include "alarm.h"
+#include "DS_3231.h"
 
 #define OUTPUT 1
 #define INPUT 0
@@ -17,13 +19,19 @@
 
 class systemTimer {
 	public:
-		systemTimer();
 		static systemTimer *getInstance();
 		void enable();
 		void disable();
+		void oncePerSecondTimer();
+		void oncePerTenSecondsTimer();
+
 	private:
-		static systemTimer instance;
+		systemTimer(void);
 		void init();
+
+		alarm alarms;
+		DS_3231 *clock;
+		static systemTimer instance;
 };
 
 #endif

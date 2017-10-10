@@ -135,6 +135,7 @@ void climateControl::setFanState(uint8_t status, uint8_t pwm) {
 }
 
 void climateControl::setWaterPumpState(uint8_t status) {
+	
 	vars.water_pump_status = status;
 	vars.water_pump_time = 0; //Update timer value
 }
@@ -217,25 +218,27 @@ void climateControl::setWaterPumpHardware() {
 
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	char string[81] = {"e\n\0"};
-//	DEBUG_STR(cmd);
+	//	DEBUG_STR(cmd);
 
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
 		// uart::getInstance()->Transmit(cmd[i]); //Echo what is sent to the device	
 	}
-
+	
 	// CMD fan_on;
 	////////////////////////////////////////////////////////////////////////////////////
 	if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
 		sprintf(string, "Turning fan on.\n");
 	 	setFanState(FAN_ON);
 	} 
+	
 	// CMD fan_off;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
 		sprintf(string, "Turning off fan.\n");
 	 	setFanState(FAN_OFF);
 	} 
+	
 	// CMD Fan_lvl_xxx;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_LVL, cmdLength - CMD_FAN_LVL_ARG_LEN, 
@@ -247,6 +250,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		sprintf(string, "Updating fan lvl to %d\n", fan_pwm_level);
 	 	setFanState(FAN_ON, fan_pwm_level);
 	} 
+	
 	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
@@ -261,11 +265,13 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		clock->setTime(datetime);
 		sprintf(string, "Updated datetime to %s\n", clock->getCurrentTime().toString());
 	} 
+
 	// CMD get_clock;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
 		sprintf(string, "Current datetime is %s\n", clock->getCurrentTime().toString());
 	} 
+
 	// CMD get_temp;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
@@ -277,6 +283,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		} else {
 			return;
 		}
+
 	// CMD get_press;
 	////////////////////////////////////////////////////////////////////////////////////		
 	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
@@ -344,4 +351,4 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	updateHardware();
 }
 
-
+// waterpump cannot stay on for longer than 5 seconds

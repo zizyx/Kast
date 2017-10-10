@@ -27,7 +27,6 @@ class climateControl;
 
 class uart {
 	public:
-		uart(void);
 		static uart *getInstance();
 		void print(char string[]);
 		void Transmit(uint8_t data);
@@ -37,6 +36,7 @@ class uart {
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength, uint8_t equalLength);
 
 	private:
+		uart(void);
 		static uart instance;
 		void Init(uint16_t baudrate);
 };
