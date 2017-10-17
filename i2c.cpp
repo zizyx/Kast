@@ -3,8 +3,14 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 #include "i2c.h"
+#include <avr/interrupt.h>
+#include "uart.h"
+
+#define TIMEOUT_TIME 2
 
 i2c i2c::instance = i2c();
+
+volatile uint8_t i2c_timeout_ticks = 0;
 
 i2c::i2c() {
 	Init();
@@ -14,9 +20,24 @@ i2c *i2c::getInstance(){
 	return &instance;
 }
 
+void i2c::resetTimeout() {
+	cli();
+	i2c_timeout_ticks = 0;
+	sei();
+}
+
+bool i2c::didI2cTimeout() {
+	if (i2c_timeout_ticks >= TIMEOUT_TIME) {
+		DEBUG_STR("I2C Error: Did timeout\n"); //TODO DEBUG kan uit, error print?
+		return true;
+	}
+	return false;
+}
+
 void i2c::SendNack(void){
 	TWCR = (1<<TWINT) | (1<<TWEN); /* send NAK this time (stop command?) */
-	while ((TWCR & (1<<TWINT)) == 0); /* wait for nack */
+	resetTimeout();
+	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for nack */
 }
 
 uint8_t i2c::ReadRegisteru8(uint8_t address, uint8_t reg){
@@ -123,7 +144,8 @@ void i2c::SendReadSlave(uint8_t address){
 	TWCR = (1<<TWINT) | (1<<TWEN);
 
 	// WAIT FOR ADDRESS TO BE SENT
-	while (!(TWCR & (1<<TWINT)));
+	resetTimeout();
+	while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
 }
 
 void i2c::SendStopBit(void){
@@ -131,7 +153,8 @@ void i2c::SendStopBit(void){
 	TWCR = (1<<TWINT)| (1<<TWEN)|(1<<TWSTO);
 
 	//Wait for stop bit to be sent //IF BARO is broken this can be teh problem
-	while((TWCR & (1<<TWSTO)) ==  0x00);
+	resetTimeout();
+	while((!didI2cTimeout()) && (TWCR & (1<<TWSTO)) ==  0x00);
 }
 
 void i2c::SendStartBit(void){
@@ -139,7 +162,8 @@ void i2c::SendStartBit(void){
 	TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
 	
 	// WAIT FOR START TO BE SENT
-	while (!(TWCR & (1<<TWINT))){
+	resetTimeout();
+	while((!didI2cTimeout()) && !(TWCR & (1<<TWINT))){
 		// debug->print("Start has been sent (I2C)\n");
 	}
 
@@ -167,7 +191,8 @@ uint8_t i2c::ReadByte(bool nack){
 		TWCR = (1<<TWINT)|(1<<TWEA)|(1<<TWEN);		/* clear int to start recieving data (start command?)*/
 	}
 
-	while ((TWCR & (1<<TWINT)) == 0); /* wait for data */
+i2c_timeout_ticks = 0;
+	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for data */
 
 	//return recieved data
 	return TWDR;	
@@ -179,7 +204,10 @@ void i2c::SendByte(uint8_t data){
 		TWCR = (1<<TWINT) | (1<<TWEN);
 
 		// WAIT FOR DATA TO BE SENT AND RECEIVE AN ACKNOWLEDGE
-		while (!(TWCR & (1<<TWINT)));
+		cli();
+		i2c_timeout_ticks = 0;
+		sei();
+		while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
 }
 
 void i2c::Write(uint8_t address, uint8_t reg){
@@ -201,7 +229,8 @@ void i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData
 	SendByte(readAddress);
 
 	//CHECK IF SENDING ADDRESS FAILED
-	while ((TWSR & 0xF8) != MT_SLA_ACK){
+	resetTimeout();
+	while((!didI2cTimeout()) && (TWSR & 0xF8) != MT_SLA_ACK){
 		// PRINT_STR(debug, "No ack received (I2C) implement timeout\n");
 	}
 		

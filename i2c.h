@@ -9,6 +9,8 @@
 #include <avr/io.h>
 #include <stdlib.h>
 
+extern volatile uint8_t i2c_timeout_ticks;
+
 class i2c{
 	public:
 		static i2c *getInstance();
@@ -22,7 +24,7 @@ class i2c{
 
 	private:
 		static i2c instance;
-		
+
 		i2c(void);
 		void Init(void);
 		void SendByte(uint8_t data);
@@ -34,6 +36,8 @@ class i2c{
 		void Write(uint8_t address, uint8_t reg);
 		void WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData);
 		uint8_t ReadByte(bool nack);
+		bool didI2cTimeout();
+		void resetTimeout();
 };
 
 #endif

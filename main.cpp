@@ -8,8 +8,6 @@
 #include "alarm.h"
 
 int main(){
-
-	alarm alarms;
 	climateControl cctl;
 	uart *debug = uart::getInstance();
 	systemTimer *timer = systemTimer::getInstance();

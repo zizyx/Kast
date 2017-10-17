@@ -2,6 +2,7 @@
 // systemTimer
 /////////////////////////////////////////////////////////////////////////////////
 #include "systemTimer.h"
+#include "i2c.h"
 
 systemTimer systemTimer::instance = systemTimer();
 volatile int timerOneSecTicks;
@@ -56,7 +57,7 @@ void systemTimer::oncePerTenSecondsTimer(){
 
 void systemTimer::oncePerSecondTimer(){
 	if(timerOneSecTicks >= 10){
-		cli();	
+		cli();
 		timerOneSecTicks = 0;
 		sei();
 		alarms.checkAlarms();
@@ -64,6 +65,7 @@ void systemTimer::oncePerSecondTimer(){
 }
 
 ISR(TIMER1_COMPA_vect){
+	i2c_timeout_ticks++;
 	timerOneSecTicks++;
 	timerTenSecTicks++;
 }
