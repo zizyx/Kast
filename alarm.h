@@ -12,7 +12,8 @@
 
 struct alarm_t{
 	datetime_t executeTime;
-	void* functionName;
+//	void* functionName;
+	void (*func)(void);
 	bool active;
 };
 
@@ -21,7 +22,7 @@ class alarm {
 		alarm();
 		void checkAlarms();
 		void addNewAlarm(datetime_t executeTime);
-
+		void addNewAlarm(datetime_t executeTime, void (*func)(void));
 	private:
 		uart *uartHandler;
 		DS_3231 *clock;
