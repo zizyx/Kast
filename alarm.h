@@ -12,7 +12,6 @@
 
 struct alarm_t{
 	datetime_t executeTime;
-//	void* functionName;
 	void (*func)(void);
 	bool active;
 };
