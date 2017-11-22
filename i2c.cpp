@@ -191,7 +191,7 @@ uint8_t i2c::ReadByte(bool nack){
 		TWCR = (1<<TWINT)|(1<<TWEA)|(1<<TWEN);		/* clear int to start recieving data (start command?)*/
 	}
 
-i2c_timeout_ticks = 0;
+	i2c_timeout_ticks = 0;
 	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for data */
 
 	//return recieved data
