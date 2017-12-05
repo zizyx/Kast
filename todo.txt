@@ -1,6 +1,8 @@
-EEPROM. opslaan welke plant we groeien, start datum
-
 timeouts plaatsen waar nodig
- - waar die ook maar oneindig kan wachten.
+ - EEPROM?
+ - ??
+
 
 Watchdog opnieuw implementeren
+
+set plant COMMAND (uart) --> python programma wat file inleest als JSON 
