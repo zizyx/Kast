@@ -1,8 +1,24 @@
+CRC check bouwen
+
 timeouts plaatsen waar nodig
  - EEPROM?
  - ??
 
+EEPROM 
+ - checksum
+ - Interrupts disablen tijdens read/write
 
 Watchdog opnieuw implementeren
 
 set plant COMMAND (uart) --> python programma wat file inleest als JSON 
+
+#define NVM_BASE					0
+#define PLANT_OFFSET				NVM_BASE
+#define PLANT_SIZE					sizeof(struct plant)
+
+#define NVM_CRC_OFFSET				PLANT_OFFSET + PLANT_SIZE
+
+for (a = NVM_BASE; a < NVM_CRC_OFFSET; a++)
+	csr = updateCRC(readNVM(a));
+
+
