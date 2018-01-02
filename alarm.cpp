@@ -14,34 +14,33 @@ alarm::alarm()
 }
 
 void doMij() {
+	uint16_t crc;
+
 	uint16_t len = 6;
-	uint8_t data[6] = {0, 2, 3, 4, 5, 255};
-	uint8_t crc, crc8;
+	uint8_t data[6] = {6, 2, 3, 4, 5, 0};
 	char str[80];
 
 	PINB = (1<<5);
 
 	crc = 0x00;
-	crc8 = 0x00;
 
-	for (uint16_t i = 0; i < len; i++) {
-		crc ^= data[i];
+	for (uint16_t j = len, data_idx = 0; j > 0; j--, data_idx++) {
+		crc ^= (data[data_idx] << 8);
 
-		for (uint8_t j = 0; j < 8; j++) {
-			if (crc & 0x01) {
-                crc = (crc >> 1) ^ 0xA001;
-			} else {
-				crc = (crc >> 1);
+		for (uint8_t i = 8; i; i--) {
+			if (crc & 0x8000){
+				crc ^= (0x1070 << 3);
 			}
-			crc |= (crc << i);
+			crc <<= 1;
 		}
-
-		crc8 ^= crc;
+		sprintf(str, "crc = %i \n", crc);
+		DEBUG_STR(str);
 	}
-	sprintf(str, "crc = %i\n", crc8);
-	DEBUG_STR(str);
 
-	// return crc;	
+	crc >>= 8;
+
+	sprintf(str, "crc = %u\n", (uint8_t)crc);
+	DEBUG_STR(str);	
 }
 
 void alarm::addNewAlarm(datetime_t executeTime, void (*func)(void)) {
