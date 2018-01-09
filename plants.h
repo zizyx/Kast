@@ -4,25 +4,20 @@
 #include <inttypes.h>
 #include "datetime.h"
 
-#define NO_PLANT 0
-#define KUSH 1
-#define NORTHERN_LIGHTS 2
+#define INVALID_PLANT_ID	0
 
-
-struct plant{
-	uint8_t plant_id;
+struct plant_t {
+	uint8_t id;
 	uint8_t max_temp;
 	uint8_t min_temp;
 	uint8_t min_humidity;
 	uint8_t max_humidity;
 	uint16_t lamp_one_time; //minutes
 	uint16_t lamp_off_time; //minutes
-	datetime_t grow_time; //days
+	datetime_t grow_duration; //days
 	uint8_t watering_cooldown; //Hours, Some plants need the ground to become dry after watering.
+	datetime_t grow_start_date;
+	bool growing_started;
 };
-
-#define NR_OF_PLANTS 2
-
-extern struct plant plants[NR_OF_PLANTS];
 
 #endif
