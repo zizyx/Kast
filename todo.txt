@@ -1,24 +1,16 @@
-CRC check bouwen
+E = Embedded
+P = Python Client
 
 timeouts plaatsen waar nodig
- - EEPROM?
- - ??
+ -E EEPROM?
+ -E ??
 
-EEPROM 
- - checksum
- - Interrupts disablen tijdens read/write
+EEPROM
+ -E Interrupts disablen tijdens read/write
+ -E EEPROM debug func toevoegen voor lezen en schrijven via uart.
 
 Watchdog opnieuw implementeren
+ - E
 
-set plant COMMAND (uart) --> python programma wat file inleest als JSON 
-
-#define NVM_BASE					0
-#define PLANT_OFFSET				NVM_BASE
-#define PLANT_SIZE					sizeof(struct plant)
-
-#define NVM_CRC_OFFSET				PLANT_OFFSET + PLANT_SIZE
-
-for (a = NVM_BASE; a < NVM_CRC_OFFSET; a++)
-	csr = updateCRC(readNVM(a));
-
-
+UART
+ -E/P set plant COMMAND (uart) --> python programma wat file inleest als JSON 
