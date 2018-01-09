@@ -1,5 +1,7 @@
-#include "climateControl.h"
 #include <math.h>
+#include "plants.h"
+#include "nvm_store.h"
+#include "climateControl.h"
 
 uint16_t stringToUint16(char* str, uint8_t str_len) {
 	double val = 0;
@@ -15,9 +17,13 @@ uint16_t stringToUint16(char* str, uint8_t str_len) {
 
 climateControl::climateControl() 
 : baro_inside(BMP280_ADDRESS_INSIDE), baro_outside(BMP280_ADDRESS_OUTSIDE) {
+	struct plant_t plant;
+	uint8_t plant_crc, plant_nvm_crc;
+
 //	setPlantToGrow(KUSH);
 	Adc = adc::getInstance();
 	clock = DS_3231::getInstance();
+	Nvm = nvm::getInstance();
 
 	vars.inside_temp = 0;
 	vars.outside_temp = 0;
@@ -47,6 +53,33 @@ climateControl::climateControl()
 	updateHardware();
 
 	// vars.selected_plant = plants[NO_PLANT];
+
+	Nvm->nvmReadBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
+	plant_crc = Nvm->calcCrc((uint8_t *)&plant, PLANT_SIZE);
+	plant_nvm_crc = Nvm->nvmRead(PLANT_CRC_OFFSET);
+
+	char str[80];
+	sprintf(str, "Plant_crc %u, plant_nvm_crc %u \n", plant_crc, plant_nvm_crc);
+	PRINT_STR(str);
+
+	if (plant_nvm_crc != plant_crc) {
+		PRINT_STR("Plant crc in nvm is incorrect.\n");
+
+		plant.id = INVALID_PLANT_ID;
+		plant.growing_started = false;
+		Nvm->nvmWriteBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
+
+		plant_crc = Nvm->calcCrc((uint8_t *)&plant, PLANT_SIZE);
+		Nvm->nvmWrite(PLANT_CRC_OFFSET, plant_crc);
+	} else if (plant.id != INVALID_PLANT_ID) {
+		PRINT_STR("Loaded plant from nvm.\n");
+		//Dan shit uitlezen en doen wat moet. Le maneure is prima.
+	} else {
+		PRINT_STR("Unkown plant set.\n");
+		//INVALID plant maar crc klopt.
+		//printje plant is not set.
+	}
+
 }
 
 //Configure the pins as: output, no_pull, driven low
@@ -167,7 +200,7 @@ uint16_t climateControl::getHumidity(){
 
 	// char string[81] = {"e\n\0"};
 	// sprintf(string, "Adc result is %d.\n", Adc->readAdc());	
-	// PRINT_STR(uartHandler, string);
+	// PRINT_STR(string);
 
 	return Adc->readAdc();
 }
@@ -187,14 +220,14 @@ void climateControl::setPlantToGrow(uint16_t plant_id) {
 
 //HARDWARE setters
 void climateControl::updateHardware() {
-	PRINT_STR(uartHandler, "update hardware");
+	PRINT_STR("update hardware");
 	setFanHardware();
 	setLampHardware();
 	setWaterPumpHardware();
 }
 
 void climateControl::setFanHardware() {
-	// PRINT_STR(uartHandler, "setFanHardware ");
+	// PRINT_STR("setFanHardware ");
 	// DEBUG_STR(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
 		Pdm->setPdm(vars.fan_pwm_level);
@@ -347,7 +380,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		}
 	}
 
-	PRINT_STR(uartHandler, string);
+	PRINT_STR(string);
 	updateHardware();
 }
 

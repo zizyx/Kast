@@ -2,17 +2,17 @@
 #define CLIMATE_CONTROL_H
 
 #include <inttypes.h>
+#include <util/delay.h>
 
-#include "plants.h"
-#include "uart.h"
+#include "adc.h"
+#include "nvm.h"
 #include "pdm.h" 
+#include "uart.h"
+#include "board.h"
+#include "plants.h"
 #include "DS_3231.h"
 #include "BMP_280.h"
 #include "datetime.h"
-#include "board.h"
-#include "adc.h"
-#include <util/delay.h>
-
 
 #define FAN_ON 1
 #define FAN_OFF 0
@@ -130,6 +130,7 @@ class climateControl {
 		BMP_280 baro_outside;
 		uart *uartHandler;
 		adc *Adc;
+		nvm *Nvm;
 
 		struct climateVars vars;
 		bool isClimateSafetyActive();
