@@ -1,32 +1,39 @@
 #include "nvm.h"
+#include "uart.h"
 
 nvm nvm::instance = nvm();
 
 nvm::nvm() {
+	if (nvmRead(EEPROM_VALID_OFFSET) != EEPROM_VALID_VAL) {
+		DEBUG_STR("Initialising EEPROM\n");
+
+		//EEPROM is not valid.
+		nvmWrite(EEPROM_VALID_OFFSET, EEPROM_VALID_VAL);
+	}
 }
 
 nvm *nvm::getInstance() {
 	return &instance;
 }
 
-uint8_t calcCrc(uint8_t *data, uint16_t len) {
-	uint8_t crc;
+uint8_t nvm::calcCrc(uint8_t *data, uint16_t len) {
+	uint16_t crc;
 
 	crc = 0x00;
 
-	for (uint16_t i = 0; i < len; i++) {
-		crc ^= data[0];
+	for (uint16_t j = len, data_idx = 0; j > 0; j--, data_idx++) {
+		crc ^= (data[data_idx] << 8);
 
-		for (uint8_t j = 0; j < 8; j++) {
-			if (crc & 0x01) {
-			 	crc = (crc >> 1) ^ 0xA001;
-			} else {
-				crc = (crc >> 1);
+		for (uint8_t i = 8; i; i--) {
+			if (crc & 0x8000) {
+				crc ^= (0x1070 << 3);
 			}
+
+			crc <<= 1;
 		}
 	}
 
-	return crc;
+	return (crc >>= 8);
 }
 
 void nvm::nvmWrite(uint16_t address, uint8_t data) {
@@ -65,3 +72,12 @@ void nvm::nvmReadBlock(uint16_t address, uint8_t *buffer, uint8_t bufferSize) {
 	for (uint16_t i = address; i < bufferSize; i++, idx++)
 		buffer[i] = nvmRead(idx);
 }
+
+// void nvm::nvmEraseBlock(uint16_t address, uint8_t size) {
+// 	for (uint16_t i = address; i < bufferSize; i++, idx++)
+// 		nvmWrite(i, EEPROM_ERASE_VAL);
+// }
+
+
+
+
