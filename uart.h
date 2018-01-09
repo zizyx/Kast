@@ -14,14 +14,14 @@
 
 #include "climateControl.h"
 
-#define PRINT_STR(o, x)	(o->print((char *) x))
-
 #define ENABLE_DEBUG
 #ifdef ENABLE_DEBUG
-#define DEBUG_STR(x)	(uart::getInstance()->print((char *) x))
+#define DEBUG_STR(x)	(PRINT_STR(x))
 #else
 #define DEBUG_STR(x)	()
 #endif
+
+#define PRINT_STR(x)	(uart::getInstance()->print((char *) x))
 
 class climateControl;
 
