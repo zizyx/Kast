@@ -1,12 +1,12 @@
 E = Embedded
 P = Python Client
 
+PLZ REFACTOR DIE AIDS TROEP ZIET ER NIET UIT
+
 timeouts plaatsen waar nodig
- -E EEPROM?
- -E ??
+ -E 
 
 EEPROM
- -E Interrupts disablen tijdens read/write
  -E EEPROM debug func toevoegen voor lezen en schrijven via uart.
 
 Watchdog opnieuw implementeren
@@ -14,3 +14,14 @@ Watchdog opnieuw implementeren
 
 UART
  -E/P set plant COMMAND (uart) --> python programma wat file inleest als JSON 
+
+bugje, clock is tussen 1 januari en februari naar 2100 gegaan 
+
+REPRODUCTION BUG:
+send "get_clock;"
+send "get_temp_0;"
+error, 
+
+possible solution,
+
+decodeBuffer changes something we dont know about

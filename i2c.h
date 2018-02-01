@@ -1,13 +1,14 @@
 #ifndef I2C_H
 #define I2C_H
 
-#define MT_SLA_ACK							 0x18
-#define DDR_SPI 							 DDRB
-#define START 								 0x08
-
 #include <inttypes.h>
 #include <avr/io.h>
 #include <stdlib.h>
+
+#define MT_SLA_ACK							0x18
+#define DDR_SPI 							DDRB
+#define START 								0x08
+#define I2C_TIMEOUT_TIME 						2
 
 extern volatile uint8_t i2c_timeout_ticks;
 

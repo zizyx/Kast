@@ -6,8 +6,6 @@
 #include <avr/interrupt.h>
 #include "uart.h"
 
-#define TIMEOUT_TIME 2
-
 i2c i2c::instance = i2c();
 
 volatile uint8_t i2c_timeout_ticks = 0;
@@ -27,7 +25,7 @@ void i2c::resetTimeout() {
 }
 
 bool i2c::didI2cTimeout() {
-	if (i2c_timeout_ticks >= TIMEOUT_TIME) {
+	if (i2c_timeout_ticks >= I2C_TIMEOUT_TIME) {
 		DEBUG_STR("I2C Error: Did timeout\n"); //TODO DEBUG kan uit, error print?
 		return true;
 	}
@@ -240,9 +238,3 @@ void i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData
 		SendByte(data);
 	}
 }
-
-// volatile bool start_sent
-// ISR(TWI_vect){
-// 	if (TWSR & (1<<TWINT))
-// 		start_sent = true;
-// }

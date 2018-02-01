@@ -8,10 +8,12 @@
 #define NVM_BASE						0x0000
 #define NVM_SIZE 						1024
 
-#define	EEPROM_VALID_VAL				0xAF
-#define	EEPROM_VALID_OFFSET				NVM_BASE
+#define	EEPROM_VALID_VAL					0xAF
+#define	EEPROM_VALID_OFFSET					NVM_BASE
+#define EEPROM_ERASE_VAL					0x00
+#define NVM_TIMEOUT_TIME					2	
 
-#define EEPROM_ERASE_VAL				0x00
+extern volatile uint8_t nvm_timeout_ticks;
 
 class nvm {
 	public:
@@ -24,6 +26,8 @@ class nvm {
 
 	private:
 		nvm();
+		bool didNvmTimeout();
+		void resetTimeout();
 		static nvm instance;
 };
 

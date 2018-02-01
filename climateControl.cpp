@@ -378,8 +378,76 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		} else {
 			return;
 		}
-	}
 
+	// CMD read_nvm_;
+	////////////////////////////////////////////////////////////////////////////////////
+	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_READ_NVM, cmdLength - CMD_READ_NVM_ARG_LEN, 
+		CMD_READ_NVM_LEN, cmdLength)) {
+		if (cmd[cmdLength - CMD_READ_NVM_ARG_LEN] == '0'){
+			sprintf(string, "Reading NVM Address\n");
+
+			uint8_t nvmBuffer[50];
+			uint16_t startAddress = stringToUint16(cmd + NVM_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
+			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
+
+			if(dataLength <= 50){
+				Nvm->nvmReadBlock(startAddress, nvmBuffer, dataLength);
+			}
+
+			sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+			PRINT_STR(string);
+			PRINT_STR_LEN((char *)nvmBuffer, dataLength);
+			return;
+		} else {
+			return;
+		}
+	}
+	// CMD write_nvm_;
+	////////////////////////////////////////////////////////////////////////////////////
+	// } else if (uart::getInstance()->isEqual(cmd, (char *)CMD_WRITE_NVM, cmdLength - CMD_WRITE_NVM_ARG_LEN, 
+	// 	CMD_WRITE_NVM_LEN, cmdLength)) {
+
+// #define END FLUSH
+// #define ESC '|'
+// #define ESC_ESC '|'
+// #define ESC_END '+'
+
+// 		uint8_t data_len, byte;
+// 		bool escaping = false;
+// 		uint8_t buffer[50];
+
+// 		for (uint8_t i = NVM_DATA_LENGTH_OFFSET, j = 0; i < RX_BUFFER_SIZE - 1; i++, j++) {
+// 			byte = (cmd + i);
+
+// 			if (escaping == false) {
+// 				if (byte == ESC) {
+// 					escaping = true;
+// 					continue;
+// 				}
+
+// 				if (byte == END) {
+// 					break;
+// 				}
+// 			} else {
+// 				escaping = false;
+// 				if (byte == ESC_END) {
+// 					buffer[j] = END;
+// 					continue;
+// 				}
+// 			}
+
+
+// 			buffer[j] = byte;		
+// 		}
+
+
+// 		if (cmd[cmdLength - CMD_WRITE_NVM_ARG_LEN] == '0'){
+// 			sprintf(string, "Writing NVM Address\n");
+// 			// setWaterPumpStREAD(NVM_OFF);
+// 		} else {
+// 			return;
+// 		}
+	// }
 	PRINT_STR(string);
 	updateHardware();
 }

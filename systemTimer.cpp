@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 #include "systemTimer.h"
 #include "i2c.h"
+#include "nvm.h"
 
 systemTimer systemTimer::instance = systemTimer();
 volatile int timerOneSecTicks;
@@ -49,7 +50,6 @@ void systemTimer::oncePerTenSecondsTimer(){
 		timerTenSecTicks = 0;
 		timerOneSecTicks = 0;
 		sei();
-		alarms.addNewAlarm((clock->getCurrentTime() + datetime_t(0,0,0,0,0,0,0)));
 		alarms.addNewAlarm((clock->getCurrentTime() + datetime_t(3,0,0,0,0,0,0)));
 		alarms.checkAlarms();
 	}
@@ -66,6 +66,7 @@ void systemTimer::oncePerSecondTimer(){
 
 ISR(TIMER1_COMPA_vect){
 	i2c_timeout_ticks++;
+	nvm_timeout_ticks++;
 	timerOneSecTicks++;
 	timerTenSecTicks++;
 }

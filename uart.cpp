@@ -33,8 +33,13 @@ void uart::Init(uint16_t baudrate){
 	sei();
 }
 
+void uart::print(char *string, uint8_t len){
+	TransmitString(string, len);
+}
+
 void uart::print(char string[]){
-	TransmitString(string);
+	uint8_t len = strlen(string);
+	TransmitString(string, len);
 }
 
 void uart::Transmit(uint8_t data){
@@ -45,25 +50,71 @@ void uart::Transmit(uint8_t data){
 	UDR0 = data;
 }
 
-void uart::TransmitString(char string[]){
-	uint8_t len = strlen(string);
-	uint8_t i;
-
-	for(i = 0; len > i; i++){
-		Transmit(string[i]);	    
+void uart::TransmitString(char *string, uint8_t len){
+	for(uint8_t i = 0; len > i; i++){
+		Transmit(string[i]);
 	}
 }
 
 void uart::checkBuffer(climateControl *cctl)
 {
+	uint8_t new_len;
+
 	for(uint8_t i = 0; i < bufferLength; i++){
 		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data
-			cctl->handleCmd(rxBuffer, i);
+			new_len = decodeBuffer(rxBuffer, i);
+			cctl->handleCmd(rxBuffer, new_len);
 			bufferLength = 0;
 		}
 	}
-	// TransmitString(rxBuffer);
+	// print(rxBuffer + '\0');
 }
+
+#define END FLUSH
+#define ESC '|'
+#define ESC_ESC '|'
+#define ESC_END '+'
+
+uint8_t uart::decodeBuffer(char *rxBuffer, uint8_t len) {
+		uint8_t byte, new_len;
+		bool escaping = false;
+		char *buffer;
+		uint8_t i, j, nr_escaped;
+
+		buffer = (char *)calloc(len, sizeof(char));
+		new_len = 0;
+		nr_escaped = 0;
+
+		for (i = 0, j = 0; i < len; i++, j++) {
+			byte = rxBuffer[i];
+
+			if (escaping == false) {
+				if (byte == ESC) {
+					escaping = true;
+					continue;
+				}
+			} else {
+				nr_escaped++;
+				escaping = false;
+				if (byte == ESC_END) {
+					buffer[j] = END;
+					continue;
+				}
+
+				if (byte == ESC_ESC) {
+					buffer[j] = ESC;
+					continue;
+				}
+			}
+			buffer[j] = byte;
+		}
+		// memcpy(rxBuffer, buffer, len - nr_escaped);
+
+		free(buffer);
+
+		return len;
+}
+
 
 bool uart::isEqual(char *a, char *b, uint8_t validateLength, uint8_t cmdLength, uint8_t length){
 	if(length != cmdLength){
