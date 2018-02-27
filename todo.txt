@@ -1,27 +1,49 @@
-E = Embedded
-P = Python Client
+****************************************************************************
+*                                   todos                                  *
+****************************************************************************
 
-PLZ REFACTOR DIE AIDS TROEP ZIET ER NIET UIT
 
-timeouts plaatsen waar nodig
- -E 
+*                                 Embedded                                 *
+o Finish working out the flushes in uart, handler of incoming commands.
+  *Prolly the cause for the bug 1.
 
-EEPROM
- -E EEPROM debug func toevoegen voor lezen en schrijven via uart.
+o PLZ REFACTOR CODE!!!! (Angry yoeri mode)
 
-Watchdog opnieuw implementeren
- - E
+o Add EEPROM debug func for reading and writing using UART.
 
-UART
- -E/P set plant COMMAND (uart) --> python programma wat file inleest als JSON 
+o Implement watchdog again.
 
-bugje, clock is tussen 1 januari en februari naar 2100 gegaan 
 
-REPRODUCTION BUG:
-send "get_clock;"
-send "get_temp_0;"
-error, 
 
-possible solution,
 
-decodeBuffer changes something we dont know about
+
+
+
+*                               Python Client                              *
+o Really very, like, a lot.
+
+
+
+
+
+
+*                         Python Client/Embedded                           *
+o Set plant COMMAND (uart) --> python which will parse a JSON file. 
+
+
+
+
+
+
+
+****************************************************************************
+*                                   bugs                                   *
+****************************************************************************
+1 We can not send 2 different subsequential commands.
+  REPRODUCTION BUG:
+    send "get_clock;"
+    send "get_temp_0;"
+    error,
+2 DecodeBuffer changes something we dont know about.
+3 Clock changed the date somewhere between 1 (most likely 9) januari and 1 
+  februari to the year 2120. 
