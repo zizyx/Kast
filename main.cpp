@@ -7,10 +7,14 @@
 #include "systemTimer.h"
 #include "alarm.h"
 #include "nvm.h"
+#include "DS_3231.h"
 
 int main(){
 	climateControl cctl;
 	uart *debug = uart::getInstance();
+	DS_3231 *clock = DS_3231::getInstance();
+	char string[81];
+
 	// systemTimer *timer = systemTimer::getInstance();
 	// nvm *nvm = nvm::getInstance();
 
@@ -49,6 +53,10 @@ int main(){
 		// sprintf(string, "Adc result is %d.\n", Adc->readAdc());	
 		// debug->TransmitString(string);
 		// _delay_ms(1);
+
+		sprintf(string, "Datetime: %s\n", clock->getCurrentTime().toString());
+		PRINT_STR(string);
+		_delay_ms(60000);
 	}
 	return 0;
 }
