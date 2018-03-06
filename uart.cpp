@@ -4,6 +4,7 @@
 #include "uart.h"
 #include "climateControl.h"
 
+
 static char rxBuffer[RX_BUFFER_SIZE];
 volatile static uint8_t bufferLength = 0;
 
@@ -37,7 +38,7 @@ void uart::print(char *string, uint8_t len){
 	TransmitString(string, len);
 }
 
-void uart::print(char string[]){
+void uart::print(char *string){
 	uint8_t len = strlen(string);
 	TransmitString(string, len);
 }
@@ -61,7 +62,7 @@ void uart::checkBuffer(climateControl *cctl)
 	uint8_t new_len;
 
 	for(uint8_t i = 0; i < bufferLength; i++){
-		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data
+		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data 
 			new_len = decodeBuffer(rxBuffer, i);
 			cctl->handleCmd(rxBuffer, new_len);
 			bufferLength = 0;
@@ -70,10 +71,6 @@ void uart::checkBuffer(climateControl *cctl)
 	// print(rxBuffer + '\0');
 }
 
-#define END FLUSH
-#define ESC '|'
-#define ESC_ESC '|'
-#define ESC_END '+'
 
 uint8_t uart::decodeBuffer(char *rxBuffer, uint8_t len) {
 		uint8_t byte, new_len;
@@ -108,7 +105,7 @@ uint8_t uart::decodeBuffer(char *rxBuffer, uint8_t len) {
 			}
 			buffer[j] = byte;
 		}
-		// memcpy(rxBuffer, buffer, len - nr_escaped);
+		memcpy(rxBuffer, buffer, len - nr_escaped);
 
 		free(buffer);
 
@@ -140,6 +137,7 @@ bool uart::isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength){
 
 ISR(USART_RX_vect){
 	if(UCSR0A & (1<<RXC0)) {
+		// bufferLength = (bufferLength + 1 ) % RX_BUFFER_SIZE;
 		rxBuffer[bufferLength++] = UDR0;
 	}
 }

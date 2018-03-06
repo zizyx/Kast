@@ -3,6 +3,8 @@
 #include "nvm_store.h"
 #include "climateControl.h"
 
+char string[81] = {"e\n\0"};
+
 uint16_t stringToUint16(char* str, uint8_t str_len) {
 	double val = 0;
 	for (int i = 0, j = str_len - 1; i < str_len; i++, j--) {
@@ -250,8 +252,7 @@ void climateControl::setWaterPumpHardware() {
 }
 
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
-	char string[81] = {"e\n\0"};
-	//	DEBUG_STR(cmd);
+	DEBUG_STR(cmd);
 
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
@@ -271,6 +272,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		sprintf(string, "Turning off fan.\n");
 	 	setFanState(FAN_OFF);
 	} 
+
 	
 	// CMD Fan_lvl_xxx;
 	////////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +304,10 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	// CMD get_clock;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
-		sprintf(string, "Current datetime is %s\n", clock->getCurrentTime().toString());
+		datetime_t tempTime = clock->getCurrentTime();
+
+
+		sprintf(string, "Current datetime is %s\n", tempTime.toString());
 	} 
 
 	// CMD get_temp;
@@ -311,35 +316,42 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		CMD_GET_TEMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
 			sprintf(string, "temp is %d\n", baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
+			// sprintf(string, "temp is %d\n", 10); //Deze is weer genaaid
 		} else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
 			sprintf(string, "temp is %d\n", baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
+			// sprintf(string, "temp is %d\n", 20); //Deze is weer genaaid
 		} else {
 			return;
 		}
+	}
 
 	// CMD get_press;
 	////////////////////////////////////////////////////////////////////////////////////		
-	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
+	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
 		CMD_GET_PRESS_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
 			sprintf(string, "pressure is %ld Pascal\n", baro_inside.ReadPressure()); //Deze is weer genaaid
+			// sprintf(string, "pressure is %ld Pascal\n", 11L); //Deze is weer genaaid
 		} else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
 			sprintf(string, "pressure is %ld Pascal\n", baro_outside.ReadPressure()); //Deze is weer genaaid
+			// sprintf(string, "pressure is %ld Pascal\n", 22L); //Deze is weer genaaid
 		} else {
 			return;
 		}
+	}
 
-	// CMD get_press;
+	// CMD get_humid;
 	////////////////////////////////////////////////////////////////////////////////////		
-	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
+	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
 		sprintf(string, "Humidity is %d.\n", getHumidity());
 		// Around 500+ is dry
 		// Fully wet is around 300-
 		// Test in ground to be sure
+	}
 
 	// CMD set_warm_lamp_;
 	////////////////////////////////////////////////////////////////////////////////////
-	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
+	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
 		CMD_SET_WARM_LAMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '0'){
 			sprintf(string, "Turning warm lamp off\n");
@@ -350,10 +362,10 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		} else {
 			return;
 		}
-
+	}
 	// CMD set_cold_lamp_;
 	////////////////////////////////////////////////////////////////////////////////////
-	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
+	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
 		CMD_SET_COLD_LAMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '0'){
 			sprintf(string, "Turning cold lamp off\n");
@@ -364,10 +376,10 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		} else {
 			return;
 		}
-
+	}
 	// CMD set_water_pump_;
 	////////////////////////////////////////////////////////////////////////////////////
-	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
+	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
 		CMD_SET_WATER_PUMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '0'){
 			sprintf(string, "Turning water pump off\n");
@@ -378,10 +390,13 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		} else {
 			return;
 		}
+	}
+	PRINT_STR(string);
+	return;
 
 	// CMD read_nvm_;
 	////////////////////////////////////////////////////////////////////////////////////
-	} else if (uart::getInstance()->isEqual(cmd, (char *)CMD_READ_NVM, cmdLength - CMD_READ_NVM_ARG_LEN, 
+	if (uart::getInstance()->isEqual(cmd, (char *)CMD_READ_NVM, cmdLength - CMD_READ_NVM_ARG_LEN, 
 		CMD_READ_NVM_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_READ_NVM_ARG_LEN] == '0'){
 			sprintf(string, "Reading NVM Address\n");
@@ -449,7 +464,5 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 // 		}
 	// }
 	PRINT_STR(string);
-	updateHardware();
+	// updateHardware();
 }
-
-// waterpump cannot stay on for longer than 5 seconds

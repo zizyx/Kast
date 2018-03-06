@@ -12,8 +12,8 @@
 int main(){
 	climateControl cctl;
 	uart *debug = uart::getInstance();
-	DS_3231 *clock = DS_3231::getInstance();
-	char string[81];
+	// DS_3231 *clock = DS_3231::getInstance();
+	// char string[81];
 
 	// systemTimer *timer = systemTimer::getInstance();
 	// nvm *nvm = nvm::getInstance();
@@ -54,9 +54,9 @@ int main(){
 		// debug->TransmitString(string);
 		// _delay_ms(1);
 
-		sprintf(string, "Datetime: %s\n", clock->getCurrentTime().toString());
-		PRINT_STR(string);
-		_delay_ms(60000);
+		// sprintf(string, "Datetime: %s\n", clock->getCurrentTime().toString());
+		// PRINT_STR(string);
+		_delay_ms(10);
 	}
 	return 0;
 }

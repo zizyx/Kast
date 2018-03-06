@@ -4,10 +4,13 @@
 #define BAUD_9600			103
 #define BAUD_RATE			BAUD_9600
 #define FLUSH 				';'
-#define END FLUSH
 #define ESC 				'|'
+#define ESC_ESC '|'
+#define ESC_END '+'
+#define END FLUSH
 #define RX_BUFFER_SIZE 		50
 #define IS_CALLBACK_SET		"IS_CALLBACK_SET"
+
 
 #include <inttypes.h> // includes stdint
 #include <avr/io.h>
@@ -31,7 +34,7 @@ class climateControl;
 class uart {
 	public:
 		static uart *getInstance();
-		void print(char string[]);
+		void print(char *string);
 		void print(char *string, uint8_t len);
 		void Transmit(uint8_t data);
 		void TransmitString(char *string, uint8_t len);

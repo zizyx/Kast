@@ -186,16 +186,16 @@ struct datetime_t {
 	private:
 		char datetime_as_string[30];
 
-		char *dayToString(uint8_t day){
+		const char *dayToString(uint8_t day){
 			switch (day) {
-				case monday: 		return (char *)"monday";
-				case tuesday: 		return (char *)"tuesday";
-				case wednesday: 	return (char *)"wednesday";
-				case thursday: 		return (char *)"thursday";
-				case friday: 		return (char *)"friday";
-				case saturday: 		return (char *)"saturday";
-				case sunday: 		return (char *)"sunday";
-				default:			return (char *)"420-day";
+				case monday: 		return (const char *)"monday";
+				case tuesday: 		return (const char *)"tuesday";
+				case wednesday: 	return (const char *)"wednesday";
+				case thursday: 		return (const char *)"thursday";
+				case friday: 		return (const char *)"friday";
+				case saturday: 		return (const char *)"saturday";
+				case sunday: 		return (const char *)"sunday";
+				default:			return (const char *)"420-day";
 			}
 		}
 
