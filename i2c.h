@@ -14,7 +14,7 @@ extern volatile uint8_t i2c_timeout_ticks;
 
 class i2c{
 	public:
-		static i2c *getInstance();
+		i2c(void);
 		void WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData);
 		uint8_t ReadRegisteru8(uint8_t address, uint8_t reg);
 		uint16_t ReadRegisteru16(uint8_t address, uint8_t reg);
@@ -24,9 +24,6 @@ class i2c{
 		void ReadRegisterFlow(uint8_t address, uint8_t reg, uint8_t cnt, uint8_t *buffer);
 
 	private:
-		static i2c instance;
-
-		i2c(void);
 		void Init(void);
 		void SendByte(uint8_t data);
 		void SendStopBit(void);

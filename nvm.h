@@ -17,7 +17,7 @@ extern volatile uint8_t nvm_timeout_ticks;
 
 class nvm {
 	public:
-		static nvm *getInstance();
+		nvm();
 		uint8_t nvmRead(uint16_t address);
 		uint8_t calcCrc(uint8_t *data, uint16_t len);
 		void nvmWrite(uint16_t address, uint8_t data);
@@ -25,10 +25,8 @@ class nvm {
 		void nvmReadBlock(uint16_t address, uint8_t *buffer, uint8_t bufferSize);
 
 	private:
-		nvm();
 		bool didNvmTimeout();
 		void resetTimeout();
-		static nvm instance;
 };
 
 #endif

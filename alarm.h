@@ -18,13 +18,12 @@ struct alarm_t{
 
 class alarm {
 	public:
-		alarm();
+		alarm(DS_3231 clock);
 		void checkAlarms();
 		void addNewAlarm(datetime_t executeTime);
 		void addNewAlarm(datetime_t executeTime, void (*func)(void));
 	private:
-		uart *uartHandler;
-		DS_3231 *clock;
+		DS_3231 m_clock;
 		void init();
 };
 

@@ -5,19 +5,14 @@
 #include "i2c.h"
 #include "nvm.h"
 
-systemTimer systemTimer::instance = systemTimer();
 volatile int timerOneSecTicks;
 volatile int timerTenSecTicks;
 
-systemTimer::systemTimer()
-: clock(DS_3231::getInstance())
+systemTimer::systemTimer(DS_3231 &clock, alarm &alarm)
+: m_clock(clock), m_alarm(alarm)
 {
 	init();
 	DDRB |= (1<<5);         //PB as output
-}
-
-systemTimer *systemTimer::getInstance(){
-	return &instance;	
 }
 
 void systemTimer::init(){
@@ -50,8 +45,8 @@ void systemTimer::oncePerTenSecondsTimer(){
 		timerTenSecTicks = 0;
 		timerOneSecTicks = 0;
 		sei();
-		alarms.addNewAlarm((clock->getCurrentTime() + datetime_t(3,0,0,0,0,0,0)));
-		alarms.checkAlarms();
+		m_alarm.addNewAlarm((m_clock.getCurrentTime() + datetime_t(3,0,0,0,0,0,0)));
+		m_alarm.checkAlarms();
 	}
 }
 
@@ -60,7 +55,7 @@ void systemTimer::oncePerSecondTimer(){
 		cli();
 		timerOneSecTicks = 0;
 		sei();
-		alarms.checkAlarms();
+		m_alarm.checkAlarms();
 	}
 }
 

@@ -17,13 +17,12 @@
 
 class pdm {
 	public:
-		static pdm *getInstance();
+		pdm();
 		void setupFanPin(uint8_t pinNr);
 		void setupPinTimer();
 		void setPdm(uint8_t pdm);
+
 	private:
-		pdm();
-		static pdm instance;
 };
 
 #endif

@@ -1,8 +1,5 @@
 #include "adc.h"
 
-//Singleton
-adc adc::instance = adc();
-
 adc::adc(void) {
 	Init();
 }
@@ -15,10 +12,6 @@ void adc::Init(void) {
 	// enableInterrupt();
 	setAdjustResultDirection(RIGHT_ADJUST_RESULT); //Difficult, don't touch
 	enableAdc();
-}
-
-adc *adc::getInstance() {
-	return &instance;
 }
 
 void adc::setVoltageReference(uint8_t setting){

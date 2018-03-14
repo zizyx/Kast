@@ -19,19 +19,17 @@
 
 class systemTimer {
 	public:
-		static systemTimer *getInstance();
+		systemTimer(DS_3231 &clock, alarm &alarm);
 		void enable();
 		void disable();
 		void oncePerSecondTimer();
 		void oncePerTenSecondsTimer();
 
 	private:
-		systemTimer(void);
 		void init();
 
-		alarm alarms;
-		DS_3231 *clock;
-		static systemTimer instance;
+		DS_3231 m_clock;
+		alarm m_alarm;
 };
 
 #endif

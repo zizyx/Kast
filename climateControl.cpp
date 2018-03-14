@@ -9,23 +9,26 @@ uint16_t stringToUint16(char* str, uint8_t str_len) {
 	double val = 0;
 	for (int i = 0, j = str_len - 1; i < str_len; i++, j--) {
 		val += (str[i] - '0') * pow(10, j);
-		// uart::getInstance()->Transmit('\n'); //Echo what is sent to the device	
-		// uart::getInstance()->Transmit(str[i] - '0'); //Echo what is sent to the device	
-		// uart::getInstance()->TransmitString(" --- "); //Echo what is sent to the device	
-		// uart::getInstance()->Transmit(val); //Echo what is sent to the device	
+		// m_serial.Transmit('\n'); //Echo what is sent to the device	
+		// m_serial.Transmit(str[i] - '0'); //Echo what is sent to the device	
+		// m_serial.TransmitString(" --- "); //Echo what is sent to the device	
+		// m_serial.Transmit(val); //Echo what is sent to the device	
 	}
 	return round(val);
 }
 
-climateControl::climateControl() 
-: baro_inside(BMP280_ADDRESS_INSIDE), baro_outside(BMP280_ADDRESS_OUTSIDE) {
+climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) : 
+    m_baro_inside(BMP280_ADDRESS_INSIDE, twi),
+    m_baro_outside(BMP280_ADDRESS_OUTSIDE, twi),
+    m_serial(serialInterface),
+    m_clock(clock)
+{
 	struct plant_t plant;
 	uint8_t plant_crc, plant_nvm_crc;
 
 //	setPlantToGrow(KUSH);
-	Adc = adc::getInstance();
-	clock = DS_3231::getInstance();
-	Nvm = nvm::getInstance();
+	adc Adc;
+	nvm Nvm;
 
 	vars.inside_temp = 0;
 	vars.outside_temp = 0;
@@ -44,10 +47,10 @@ climateControl::climateControl()
 
 	vars.humidity = 0;
 
-	Pdm = pdm::getInstance();
-	Pdm->setupFanPin(FAN_PIN);
-	Pdm->setupPinTimer();
-	Pdm->setPdm(255);
+	pdm Pdm;
+	Pdm.setupFanPin(FAN_PIN);
+	Pdm.setupPinTimer();
+	Pdm.setPdm(255);
 
 	setupLampHardware();
 	setupWaterPumpHardware();
@@ -56,28 +59,28 @@ climateControl::climateControl()
 
 	// vars.selected_plant = plants[NO_PLANT];
 
-	Nvm->nvmReadBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
-	plant_crc = Nvm->calcCrc((uint8_t *)&plant, PLANT_SIZE);
-	plant_nvm_crc = Nvm->nvmRead(PLANT_CRC_OFFSET);
+	Nvm.nvmReadBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
+	plant_crc = Nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
+	plant_nvm_crc = Nvm.nvmRead(PLANT_CRC_OFFSET);
 
 	char str[80];
 	sprintf(str, "Plant_crc %u, plant_nvm_crc %u \n", plant_crc, plant_nvm_crc);
-	PRINT_STR(str);
+	// PRINT_STR(str);
 
 	if (plant_nvm_crc != plant_crc) {
-		PRINT_STR("Plant crc in nvm is incorrect.\n");
+		// PRINT_STR("Plant crc in nvm is incorrect.\n");
 
 		plant.id = INVALID_PLANT_ID;
 		plant.growing_started = false;
-		Nvm->nvmWriteBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
+		Nvm.nvmWriteBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
 
-		plant_crc = Nvm->calcCrc((uint8_t *)&plant, PLANT_SIZE);
-		Nvm->nvmWrite(PLANT_CRC_OFFSET, plant_crc);
+		plant_crc = Nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
+		Nvm.nvmWrite(PLANT_CRC_OFFSET, plant_crc);
 	} else if (plant.id != INVALID_PLANT_ID) {
-		PRINT_STR("Loaded plant from nvm.\n");
+		// PRINT_STR("Loaded plant from nvm.\n");
 		//Dan shit uitlezen en doen wat moet. Le maneure is prima.
 	} else {
-		PRINT_STR("Unkown plant set.\n");
+		// PRINT_STR("Unkown plant set.\n");
 		//INVALID plant maar crc klopt.
 		//printje plant is not set.
 	}
@@ -165,8 +168,8 @@ void climateControl::setFanState(uint8_t status, uint8_t pwm) {
 	}
 
 	vars.fan_pwm_level = pwm;
-	DEBUG_STR("setFanState");
-	uart::getInstance()->Transmit(vars.fan_pwm_level);
+	// DEBUG_STR("setFanState");
+	// m_serial.Transmit(vars.fan_pwm_level);
 }
 
 void climateControl::setWaterPumpState(uint8_t status) {
@@ -196,15 +199,15 @@ void climateControl::calculateFanPwmVars() {
 }
 
 uint16_t climateControl::getHumidity(){
-	Adc->setChannel(CHANNEL_ZERO);
-	Adc->startFirstConversion();
+	Adc.setChannel(CHANNEL_ZERO);
+	Adc.startFirstConversion();
 	_delay_ms(100); 
 
 	// char string[81] = {"e\n\0"};
-	// sprintf(string, "Adc result is %d.\n", Adc->readAdc());	
+	// sprintf(string, "Adc result is %d.\n", Adc.readAdc());	
 	// PRINT_STR(string);
 
-	return Adc->readAdc();
+	return Adc.readAdc();
 }
 
 void climateControl::calculateLampVars(uint8_t lamp_id) {
@@ -222,7 +225,7 @@ void climateControl::setPlantToGrow(uint16_t plant_id) {
 
 //HARDWARE setters
 void climateControl::updateHardware() {
-	PRINT_STR("update hardware");
+	// PRINT_STR("update hardware");
 	setFanHardware();
 	setLampHardware();
 	setWaterPumpHardware();
@@ -232,9 +235,9 @@ void climateControl::setFanHardware() {
 	// PRINT_STR("setFanHardware ");
 	// DEBUG_STR(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
-		Pdm->setPdm(vars.fan_pwm_level);
+		Pdm.setPdm(vars.fan_pwm_level);
 	} else if (vars.fan_status == FAN_OFF){
-		Pdm->setPdm(MIN_FAN_PWM);
+		Pdm.setPdm(MIN_FAN_PWM);
 	}
 	//Zet pwm regs
 }
@@ -252,23 +255,21 @@ void climateControl::setWaterPumpHardware() {
 }
 
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
-	DEBUG_STR(cmd);
-
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
-		// uart::getInstance()->Transmit(cmd[i]); //Echo what is sent to the device	
+		// m_serial.Transmit(cmd[i]); //Echo what is sent to the device	
 	}
 	
 	// CMD fan_on;
 	////////////////////////////////////////////////////////////////////////////////////
-	if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
+	if (m_serial.isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
 		sprintf(string, "Turning fan on.\n");
 	 	setFanState(FAN_ON);
 	} 
 	
 	// CMD fan_off;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
+	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
 		sprintf(string, "Turning off fan.\n");
 	 	setFanState(FAN_OFF);
 	} 
@@ -276,7 +277,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	
 	// CMD Fan_lvl_xxx;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_FAN_LVL, cmdLength - CMD_FAN_LVL_ARG_LEN, 
+	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_LVL, cmdLength - CMD_FAN_LVL_ARG_LEN, 
 			CMD_FAN_LVL_LEN, cmdLength)) {
 
 		uint8_t fan_pwm_level = 0;
@@ -288,7 +289,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	
 	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
+	else if (m_serial.isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
 		datetime_t datetime = datetime_t(
 			(uint8_t)stringToUint16(cmd + (CLOCK_SECOND_OFFSET), CLOCK_SECOND_OFFSET_LEN),
 			(uint8_t)stringToUint16(cmd + (CLOCK_MINUTE_OFFSET), CLOCK_MINUTE_OFFSET_LEN),
@@ -297,14 +298,14 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			(uint8_t)stringToUint16(cmd + (CLOCK_DATE_OFFSET), CLOCK_DATE_OFFSET_LEN),
 			(uint8_t)stringToUint16(cmd + (CLOCK_MONTH_OFFSET), CLOCK_MONTH_OFFSET_LEN),
 			stringToUint16(cmd + (CLOCK_YEAR_OFFSET), CLOCK_YEAR_OFFSET_LEN));
-		clock->setTime(datetime);
-		sprintf(string, "Updated datetime to %s\n", clock->getCurrentTime().toString());
+		m_clock.setTime(datetime);
+		sprintf(string, "Updated datetime to %s\n", m_clock.getCurrentTime().toString());
 	} 
 
 	// CMD get_clock;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
-		datetime_t tempTime = clock->getCurrentTime();
+	else if (m_serial.isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
+		datetime_t tempTime = m_clock.getCurrentTime();
 
 
 		sprintf(string, "Current datetime is %s\n", tempTime.toString());
@@ -312,13 +313,13 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 
 	// CMD get_temp;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
+	else if (m_serial.isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
 		CMD_GET_TEMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
-			sprintf(string, "temp is %d\n", baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
+			sprintf(string, "temp is %d\n", m_baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
 			// sprintf(string, "temp is %d\n", 10); //Deze is weer genaaid
 		} else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
-			sprintf(string, "temp is %d\n", baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
+			sprintf(string, "temp is %d\n", m_baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
 			// sprintf(string, "temp is %d\n", 20); //Deze is weer genaaid
 		} else {
 			return;
@@ -327,13 +328,13 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 
 	// CMD get_press;
 	////////////////////////////////////////////////////////////////////////////////////		
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
+	else if (m_serial.isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
 		CMD_GET_PRESS_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
-			sprintf(string, "pressure is %ld Pascal\n", baro_inside.ReadPressure()); //Deze is weer genaaid
+			sprintf(string, "pressure is %ld Pascal\n", m_baro_inside.ReadPressure()); //Deze is weer genaaid
 			// sprintf(string, "pressure is %ld Pascal\n", 11L); //Deze is weer genaaid
 		} else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
-			sprintf(string, "pressure is %ld Pascal\n", baro_outside.ReadPressure()); //Deze is weer genaaid
+			sprintf(string, "pressure is %ld Pascal\n", m_baro_outside.ReadPressure()); //Deze is weer genaaid
 			// sprintf(string, "pressure is %ld Pascal\n", 22L); //Deze is weer genaaid
 		} else {
 			return;
@@ -342,7 +343,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 
 	// CMD get_humid;
 	////////////////////////////////////////////////////////////////////////////////////		
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
+	else if (m_serial.isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
 		sprintf(string, "Humidity is %d.\n", getHumidity());
 		// Around 500+ is dry
 		// Fully wet is around 300-
@@ -351,7 +352,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 
 	// CMD set_warm_lamp_;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
+	else if (m_serial.isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
 		CMD_SET_WARM_LAMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '0'){
 			sprintf(string, "Turning warm lamp off\n");
@@ -365,7 +366,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	}
 	// CMD set_cold_lamp_;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
+	else if (m_serial.isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
 		CMD_SET_COLD_LAMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '0'){
 			sprintf(string, "Turning cold lamp off\n");
@@ -379,7 +380,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	}
 	// CMD set_water_pump_;
 	////////////////////////////////////////////////////////////////////////////////////
-	else if (uart::getInstance()->isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
+	else if (m_serial.isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
 		CMD_SET_WATER_PUMP_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '0'){
 			sprintf(string, "Turning water pump off\n");
@@ -391,12 +392,12 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			return;
 		}
 	}
-	PRINT_STR(string);
+	m_serial.print(string);
 	return;
 
 	// CMD read_nvm_;
 	////////////////////////////////////////////////////////////////////////////////////
-	if (uart::getInstance()->isEqual(cmd, (char *)CMD_READ_NVM, cmdLength - CMD_READ_NVM_ARG_LEN, 
+	if (m_serial.isEqual(cmd, (char *)CMD_READ_NVM, cmdLength - CMD_READ_NVM_ARG_LEN, 
 		CMD_READ_NVM_LEN, cmdLength)) {
 		if (cmd[cmdLength - CMD_READ_NVM_ARG_LEN] == '0'){
 			sprintf(string, "Reading NVM Address\n");
@@ -406,12 +407,12 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
 
 			if(dataLength <= 50){
-				Nvm->nvmReadBlock(startAddress, nvmBuffer, dataLength);
+				Nvm.nvmReadBlock(startAddress, nvmBuffer, dataLength);
 			}
 
 			sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
-			PRINT_STR(string);
-			PRINT_STR_LEN((char *)nvmBuffer, dataLength);
+			// PRINT_STR(string);
+			// PRINT_STR_LEN((char *)nvmBuffer, dataLength);
 			return;
 		} else {
 			return;
@@ -419,7 +420,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	}
 	// CMD write_nvm_;
 	////////////////////////////////////////////////////////////////////////////////////
-	// } else if (uart::getInstance()->isEqual(cmd, (char *)CMD_WRITE_NVM, cmdLength - CMD_WRITE_NVM_ARG_LEN, 
+	// } else if (m_serial.isEqual(cmd, (char *)CMD_WRITE_NVM, cmdLength - CMD_WRITE_NVM_ARG_LEN, 
 	// 	CMD_WRITE_NVM_LEN, cmdLength)) {
 
 // #define END FLUSH
@@ -463,6 +464,6 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 // 			return;
 // 		}
 	// }
-	PRINT_STR(string);
+	// PRINT_STR(string);
 	// updateHardware();
 }

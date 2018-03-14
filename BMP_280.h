@@ -34,11 +34,9 @@
 #define ADDRESS_LOW			 			 	 0x76
 #define ADDRESS_HIGH		 				 0x77
 
-class i2c;
-
 class BMP_280{
 	public:
-		BMP_280(uint8_t address);
+		BMP_280(uint8_t address, i2c &twi);
 		uint32_t ReadTemperature();
 		uint8_t ReadTemperatureRound();
 		uint32_t ReadPressure();
@@ -72,7 +70,7 @@ class BMP_280{
 			int64_t calculated_pressure;
 		} bmp280_data;
 	private:
-		i2c *I2C;
+		i2c m_i2c;
 		void ReadPressureRegisters();
 		void ReadTempRegisters();
 

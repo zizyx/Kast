@@ -1,21 +1,15 @@
 #include "nvm.h"
 #include "uart.h"
 
-nvm nvm::instance = nvm();
-
 volatile uint8_t nvm_timeout_ticks = 0;
 
 nvm::nvm() {
 	if (nvmRead(EEPROM_VALID_OFFSET) != EEPROM_VALID_VAL) {
-		DEBUG_STR("Initialising EEPROM\n");
+		// DEBUG_STR("Initialising EEPROM\n");
 
 		//EEPROM is not valid.
 		nvmWrite(EEPROM_VALID_OFFSET, EEPROM_VALID_VAL);
 	}
-}
-
-nvm *nvm::getInstance() {
-	return &instance;
 }
 
 void nvm::resetTimeout() {
@@ -25,7 +19,7 @@ void nvm::resetTimeout() {
 
 bool nvm::didNvmTimeout() {
 	if (nvm_timeout_ticks >= NVM_TIMEOUT_TIME) {
-		DEBUG_STR("NVM Error: Did timeout\n"); 
+		// DEBUG_STR("NVM Error: Did timeout\n"); 
 		return true;
 	}
 	return false;

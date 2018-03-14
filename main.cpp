@@ -10,8 +10,15 @@
 #include "DS_3231.h"
 
 int main(){
-	climateControl cctl;
-	uart *debug = uart::getInstance();
+	i2c twi;
+	uart debug;
+
+	DS_3231 m_clock;
+
+	alarm m_alarm(m_clock);
+
+	climateControl cctl(twi, debug, m_clock);
+
 	// DS_3231 *clock = DS_3231::getInstance();
 	// char string[81];
 
@@ -19,7 +26,10 @@ int main(){
 	// nvm *nvm = nvm::getInstance();
 
 	while(1){
-		debug->checkBuffer(&cctl);
+//		debug.callback = &climateControl::handleCmd;
+
+		debug.checkBuffer(cctl, &climateControl::handleCmd);
+//		debug.checkBuffer();
 		// PRINT_STR("TEST");
 		// timer->oncePerSecondTimer();
 		// timer->oncePerTenSecondsTimer();

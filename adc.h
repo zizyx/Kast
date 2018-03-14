@@ -34,7 +34,7 @@
 
 class adc {
 	public:
-		static adc *getInstance();
+		adc(void);
 		void setVoltageReference(uint8_t setting);
 		void setChannel(uint8_t channel);
 		void enableAdc(void);
@@ -47,8 +47,6 @@ class adc {
 		uint16_t readAdc();
 
 	private:
-		static adc instance;
-		adc(void);
 		void Init(void);
 		uint8_t readAdcLow();
 		uint8_t readAdcHigh();

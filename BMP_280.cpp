@@ -3,8 +3,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 #include "BMP_280.h"
 
-BMP_280::BMP_280(uint8_t address){
-	I2C = i2c::getInstance();
+BMP_280::BMP_280(uint8_t address, i2c &twi) :
+	m_i2c(twi)
+{
 	bmp280_data.address = address;
 }
 
@@ -20,15 +21,15 @@ uint8_t BMP_280::ReadTemperatureRound() {
 
 void BMP_280::ReadTempRegisters(){
 	// Start command
-	I2C->WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);			
+	m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);			
 
-	bmp280_data.msb_temp = I2C->ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_MSB);
-	bmp280_data.lsb_temp = I2C->ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_LSB);
-	bmp280_data.xlsb_temp = I2C->ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_XLSB);
+	bmp280_data.msb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_MSB);
+	bmp280_data.lsb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_LSB);
+	bmp280_data.xlsb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_XLSB);
 
-	bmp280_data.digt1 = I2C->ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_T1);
-	bmp280_data.digt2 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T2);
-	bmp280_data.digt3 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T3);
+	bmp280_data.digt1 = m_i2c.ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_T1);
+	bmp280_data.digt2 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T2);
+	bmp280_data.digt3 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T3);
 }
 
 void BMP_280::TempCalc(void) {
@@ -67,21 +68,21 @@ uint8_t BMP_280::ReadPressureRound() {
 }
 
 void BMP_280::ReadPressureRegisters(){
-	I2C->WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);	
+	m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);	
 
-	bmp280_data.msb_pres = I2C->ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_MSB);
-	bmp280_data.lsb_pres = I2C->ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_LSB);
-	bmp280_data.xlsb_pres = I2C->ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_XLSB);
+	bmp280_data.msb_pres = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_MSB);
+	bmp280_data.lsb_pres = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_LSB);
+	bmp280_data.xlsb_pres = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_XLSB);
 
-	bmp280_data.digp1 = I2C->ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_P1);
-	bmp280_data.digp2 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P2);
-	bmp280_data.digp3 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P3);
-	bmp280_data.digp4 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P4);
-	bmp280_data.digp5 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P5);
-	bmp280_data.digp6 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P6);
-	bmp280_data.digp7 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P7);
-	bmp280_data.digp8 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P8);
-	bmp280_data.digp9 = I2C->ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P9);
+	bmp280_data.digp1 = m_i2c.ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_P1);
+	bmp280_data.digp2 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P2);
+	bmp280_data.digp3 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P3);
+	bmp280_data.digp4 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P4);
+	bmp280_data.digp5 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P5);
+	bmp280_data.digp6 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P6);
+	bmp280_data.digp7 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P7);
+	bmp280_data.digp8 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P8);
+	bmp280_data.digp9 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P9);
 }
 
 

@@ -3,15 +3,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 #include "pdm.h"
 
-pdm pdm::instance = pdm();
-
 pdm::pdm(){
 	setupPinTimer();
 	setPdm(255);
-}
-
-pdm *pdm::getInstance(){
-	return &instance;	
 }
 
 //Choose any pin from port b

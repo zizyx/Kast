@@ -5,6 +5,7 @@
 #include <util/delay.h>
 
 #include "adc.h"
+#include "i2c.h"
 #include "nvm.h"
 #include "pdm.h" 
 #include "uart.h"
@@ -65,7 +66,7 @@
 
 #define CMD_SET_WARM_LAMP "set_warm_lamp_"
 #define CMD_SET_WARM_LAMP_ARG_LEN 1
-#define CMD_SET_WARM_LAMP_LEN (15 + CMD_SET_WARM_LAMP_ARG_LEN)
+#define CMD_SET_WARM_LAMP_LEN (14 + CMD_SET_WARM_LAMP_ARG_LEN)
 
 #define CMD_SET_COLD_LAMP "set_cold_lamp_"
 #define CMD_SET_COLD_LAMP_ARG_LEN 1
@@ -134,18 +135,18 @@ struct climateVars {
 
 class climateControl {
 	public:
+		climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock);
 		void handleCmd(char *cmd, uint8_t cmdLength);
-		climateControl(void);
 		void checkClimate();
 
 	private:
-		pdm *Pdm;
-		DS_3231 *clock;
-		BMP_280 baro_inside;
-		BMP_280 baro_outside;
-		uart *uartHandler;
-		adc *Adc;
-		nvm *Nvm;
+		BMP_280 m_baro_inside;
+		BMP_280 m_baro_outside;
+		uart m_serial;
+		DS_3231 m_clock;
+		pdm Pdm;
+		adc Adc;
+		nvm Nvm;
 
 		struct climateVars vars;
 		bool isClimateSafetyActive();

@@ -17,34 +17,30 @@
 #include <string.h>
 #include <avr/interrupt.h>
 
-#include "climateControl.h"
-
-#define ENABLE_DEBUG
-#ifdef ENABLE_DEBUG
-#define DEBUG_STR(x)			(PRINT_STR(x))
-#else
-#define DEBUG_STR(x)			()
-#endif
-
-#define PRINT_STR(x)			(uart::getInstance()->print((char *) x))
-#define PRINT_STR_LEN(x, len)	(uart::getInstance()->print((char *) x, len))
+// #define ENABLE_DEBUG
+// #ifdef ENABLE_DEBUG
+// #define DEBUG_STR(x)			(PRINT_STR(x))
+// #else
+// #define DEBUG_STR(x)			()
+// #endif
 
 class climateControl;
 
+//  AmemberFunc points to a member of A that takes ()
+typedef  void (climateControl::*callback)(char *, uint8_t);
+
 class uart {
 	public:
-		static uart *getInstance();
+		uart(void);
 		void print(char *string);
 		void print(char *string, uint8_t len);
 		void Transmit(uint8_t data);
 		void TransmitString(char *string, uint8_t len);
-		void checkBuffer(climateControl *cctl);
+		void checkBuffer(climateControl &c, callback cb);
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength);
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength, uint8_t equalLength);
 
 	private:
-		uart(void);
-		static uart instance;
 		void Init(uint16_t baudrate);
 		uint8_t decodeBuffer(char *rxBuffer, uint8_t len);
 };

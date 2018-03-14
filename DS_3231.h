@@ -100,18 +100,16 @@ struct DS3231_data {
 
 class DS_3231 {
 	public:
-		static DS_3231 *getInstance();
+		DS_3231(void);
 		uint16_t ReadTemperature();
 		void getTimeVarsAsString(char *string);
 		datetime_t getCurrentTime();
 		void testing(char* string);
 		void setTime(datetime_t datetime);
 	private:
-		static DS_3231 instance;
 		i2c *I2C;
 		uart *debug;
 
-		DS_3231(void);
 		char* dayToString(uint8_t day);
 		void ReadClockRegisters();
 		void ReadTempRegisters();

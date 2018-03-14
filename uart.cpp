@@ -8,14 +8,8 @@
 static char rxBuffer[RX_BUFFER_SIZE];
 volatile static uint8_t bufferLength = 0;
 
-uart uart::instance = uart();
-
 uart::uart(){
 	Init(BAUD_RATE);
-}
-
-uart *uart::getInstance(){
-	return &instance;
 }
 
 void uart::Init(uint16_t baudrate){
@@ -57,14 +51,15 @@ void uart::TransmitString(char *string, uint8_t len){
 	}
 }
 
-void uart::checkBuffer(climateControl *cctl)
+void uart::checkBuffer(climateControl &c, callback cb)
 {
-	uint8_t new_len;
+	// uint8_t new_len;
 
 	for(uint8_t i = 0; i < bufferLength; i++){
 		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data 
-			new_len = decodeBuffer(rxBuffer, i);
-			cctl->handleCmd(rxBuffer, new_len);
+			// new_len = decodeBuffer(rxBuffer, i);
+			(c.* cb)(rxBuffer, i);
+//			((climateControl).*(this.callback))(rxBuffer, i);
 			bufferLength = 0;
 		}
 	}

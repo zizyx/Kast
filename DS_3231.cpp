@@ -4,16 +4,9 @@
 #include "DS_3231.h"
 #include <util/delay.h>
 
-DS_3231 DS_3231::instance = DS_3231();
-
 static DS3231_data clk_data;
 
 DS_3231::DS_3231(){
-	debug = uart::getInstance();
-}
-
-DS_3231 *DS_3231::getInstance(){
-	return &instance;
 }
 
 void DS_3231::ReadClockRegisters(){

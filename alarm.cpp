@@ -8,8 +8,8 @@ struct alarm_t alarms[MAX_NUMBER_ALARMS] =  {
 	}	
 };
 
-alarm::alarm()
-: clock(DS_3231::getInstance())
+alarm::alarm(DS_3231 clock)
+: m_clock(clock)
 {
 }
 
@@ -33,7 +33,7 @@ void alarm::addNewAlarm(datetime_t executeTime) {
 }
 
 void alarm::checkAlarms(){
-	datetime_t now = clock->getCurrentTime();
+	datetime_t now = m_clock.getCurrentTime();
 
 	for (uint8_t i = 0; i < MAX_NUMBER_ALARMS; i++){
 		if(alarms[i].active){

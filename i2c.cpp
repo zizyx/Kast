@@ -6,17 +6,12 @@
 #include <avr/interrupt.h>
 #include "uart.h"
 
-i2c i2c::instance = i2c();
-
 volatile uint8_t i2c_timeout_ticks = 0;
 
 i2c::i2c() {
 	Init();
 }
 
-i2c *i2c::getInstance(){
-	return &instance;
-}
 
 void i2c::resetTimeout() {
 	cli();
@@ -26,7 +21,7 @@ void i2c::resetTimeout() {
 
 bool i2c::didI2cTimeout() {
 	if (i2c_timeout_ticks >= I2C_TIMEOUT_TIME) {
-		DEBUG_STR("I2C Error: Did timeout\n"); //TODO DEBUG kan uit, error print?
+		// DEBUG_STR("I2C Error: Did timeout\n"); //TODO DEBUG kan uit, error print?
 		return true;
 	}
 	return false;
