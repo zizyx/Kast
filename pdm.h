@@ -5,6 +5,7 @@
 #include <avr/interrupt.h>
 #include <inttypes.h>
 #include <string.h>
+#include "uart.h"
 
 //PB1
 #define OUTPUT 1
@@ -17,12 +18,13 @@
 
 class pdm {
 	public:
-		pdm();
+		pdm(uart &serialInterface);
 		void setupFanPin(uint8_t pinNr);
 		void setupPinTimer();
 		void setPdm(uint8_t pdm);
 
 	private:
+		uart m_serial;
 };
 
 #endif

@@ -28,13 +28,15 @@ void uart::Init(uint16_t baudrate){
 	sei();
 }
 
-void uart::print(char *string, uint8_t len){
-	TransmitString(string, len);
+void uart::print(const char *string, uint8_t len){
+	for(uint8_t i = 0; len > i; i++){
+		Transmit(string[i]);
+	}
 }
 
-void uart::print(char *string){
+void uart::print(const char *string){
 	uint8_t len = strlen(string);
-	TransmitString(string, len);
+	print(string, len);
 }
 
 void uart::Transmit(uint8_t data){
@@ -43,12 +45,6 @@ void uart::Transmit(uint8_t data){
 
 	/* Put data into buffer, sends the data */
 	UDR0 = data;
-}
-
-void uart::TransmitString(char *string, uint8_t len){
-	for(uint8_t i = 0; len > i; i++){
-		Transmit(string[i]);
-	}
 }
 
 void uart::checkBuffer(climateControl &c, callback cb)
@@ -107,6 +103,18 @@ uint8_t uart::decodeBuffer(char *rxBuffer, uint8_t len) {
 		return len;
 }
 
+//cmd,  write_nvm_00100_08_01234567;
+// m_serial.isPartEqual("write_nvm_00100_08_01234567", "write_nvm_01024_50_", 27 - 9, 19)
+bool uart::isPartEqual(char *a, char *b, uint8_t validateLength) {
+	for(uint8_t i = 0; i < validateLength; i++){
+		if(a[i] != b[i]){
+			// TransmitString("a[i] != b[i]\n");
+			return false;
+		}
+	}
+	// TransmitString("Equal :D\n");
+	return true; //Equal :D
+}
 
 bool uart::isEqual(char *a, char *b, uint8_t validateLength, uint8_t cmdLength, uint8_t length){
 	if(length != cmdLength){
@@ -116,14 +124,7 @@ bool uart::isEqual(char *a, char *b, uint8_t validateLength, uint8_t cmdLength, 
 		return false;
 	}
 
-	for(uint8_t i = 0; i < validateLength; i++){
-		if(a[i] != b[i]){
-			// TransmitString("a[i] != b[i]\n");
-			return false;
-		}
-	}
-	// TransmitString("Equal :D\n");
-	return true; //Equal :D
+	return isPartEqual(a, b, validateLength);
 }
 
 bool uart::isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength){

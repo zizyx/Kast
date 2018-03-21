@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <stdlib.h>
+#include "uart.h"
 
 #define AREF 		0x00
 #define AVCC 		0x01
@@ -34,7 +35,7 @@
 
 class adc {
 	public:
-		adc(void);
+		adc(uart &serialInterface);
 		void setVoltageReference(uint8_t setting);
 		void setChannel(uint8_t channel);
 		void enableAdc(void);
@@ -47,6 +48,7 @@ class adc {
 		uint16_t readAdc();
 
 	private:
+		uart m_serial;
 		void Init(void);
 		uint8_t readAdcLow();
 		uint8_t readAdcHigh();

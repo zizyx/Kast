@@ -10,9 +10,8 @@
 #include "DS_3231.h"
 
 int main(){
-	i2c twi;
 	uart debug;
-
+	i2c twi;
 	DS_3231 m_clock;
 
 	alarm m_alarm(m_clock);

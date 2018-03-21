@@ -1,14 +1,17 @@
 #include "nvm.h"
-#include "uart.h"
 
 volatile uint8_t nvm_timeout_ticks = 0;
 
-nvm::nvm() {
+nvm::nvm(uart &serialInterface) :
+	m_serial(serialInterface)
+{
 	if (nvmRead(EEPROM_VALID_OFFSET) != EEPROM_VALID_VAL) {
-		// DEBUG_STR("Initialising EEPROM\n");
+		m_serial.print("Initialising EEPROM\n");
 
-		//EEPROM is not valid.
+		// EEPROM is not valid.
 		nvmWrite(EEPROM_VALID_OFFSET, EEPROM_VALID_VAL);
+	} else{
+		m_serial.print("EEPROM is valid\n");
 	}
 }
 
@@ -19,7 +22,7 @@ void nvm::resetTimeout() {
 
 bool nvm::didNvmTimeout() {
 	if (nvm_timeout_ticks >= NVM_TIMEOUT_TIME) {
-		// DEBUG_STR("NVM Error: Did timeout\n"); 
+		m_serial.print("NVM Error: Did timeout\n"); 
 		return true;
 	}
 	return false;
@@ -75,15 +78,13 @@ uint8_t nvm::nvmRead(uint16_t address) {
 }
 
 void nvm::nvmWriteBlock(uint16_t address, uint8_t *data, uint8_t bufferSize) {
-	uint16_t idx = 0;
-	for (uint16_t i = address; i < bufferSize; i++, idx++)
-		nvmWrite(i, data[idx]);
+	for (uint16_t i = 0; i < bufferSize; i++)
+		nvmWrite(address + i, data[i]);
 }
 
-void nvm::nvmReadBlock(uint16_t address, uint8_t *buffer, uint8_t bufferSize) {
-	uint16_t idx = 0;
-	for (uint16_t i = address; i < bufferSize; i++, idx++)
-		buffer[i] = nvmRead(idx);
+void nvm::nvmReadBlock(uint16_t addressOffset, uint8_t *buffer, uint8_t bufferSize) {
+	for (uint16_t i = 0; i < bufferSize; i++)
+		buffer[i] = nvmRead(addressOffset + i);
 }
 
 // void nvm::nvmEraseBlock(uint16_t address, uint8_t size) {

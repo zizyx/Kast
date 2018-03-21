@@ -4,13 +4,8 @@
 
 
 *                                 Embedded                                 *
-o Finish working out the flushes in uart, handler of incoming commands.
-  *Prolly the cause for the bug 1.
-
-o PLZ REFACTOR CODE!!!! (Angry yoeri mode)
-
-o Add EEPROM debug func for reading and writing using UART.
-
+o Working out the flushes in uart, handler of data in commands (nvm).
+ 
 o Implement watchdog again.
 
 

@@ -3,7 +3,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 #include "pdm.h"
 
-pdm::pdm(){
+pdm::pdm(uart &serialInterface) :
+	m_serial(serialInterface)
+{
 	setupPinTimer();
 	setPdm(255);
 }

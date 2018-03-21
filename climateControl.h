@@ -89,14 +89,15 @@
 #define CMD_READ_NVM "read_nvm_01024_50"
 #define CMD_READ_NVM_ARG_LEN 8
 #define CMD_READ_NVM_LEN (9 + CMD_READ_NVM_ARG_LEN)
-#define NVM_START_ADDRESS_OFFSET (CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN + 0)
-#define NVM_DATA_LENGTH_OFFSET (CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN + 6)
+#define NVM_READ_START_ADDRESS_OFFSET (CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN + 0)
+#define NVM_READ_DATA_LENGTH_OFFSET (CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN + 6)
 
-// #define CMD_WRITE_NVM "write_nvm_"
-// #define CMD_WRITE_NVM_ARG_LEN 0
-// #define CMD_WRITE_NVM_LEN (10 + CMD_WRITE_NVM_ARG_LEN)
-// #define NVM_START_ADDRESS_OFFSET (CMD_WRITE_NVM - CMD_WRITE_NVM_ARG_LEN + 0)
-// #define NVM_END_ADDRESS_OFFSET (CMD_WRITE_NVM - CMD_WRITE_NVM_ARG_LEN + 5)
+#define CMD_WRITE_NVM "write_nvm_01024_50_"
+#define CMD_WRITE_NVM_ARG_LEN 9
+#define CMD_WRITE_NVM_LEN (10 + CMD_WRITE_NVM_ARG_LEN)
+#define NVM_WRITE_START_ADDRESS_OFFSET (CMD_WRITE_NVM_LEN - CMD_WRITE_NVM_ARG_LEN + 0)
+#define NVM_WRITE_DATA_LENGTH_OFFSET (CMD_WRITE_NVM_LEN - CMD_WRITE_NVM_ARG_LEN + 6)
+
 #define NVM_ADDRESS_LEN 5
 #define NVM_DATA_LEN 	2
 
@@ -142,11 +143,12 @@ class climateControl {
 	private:
 		BMP_280 m_baro_inside;
 		BMP_280 m_baro_outside;
-		uart m_serial;
+		nvm 	m_nvm;
+		uart 	m_serial;
 		DS_3231 m_clock;
-		pdm Pdm;
-		adc Adc;
-		nvm Nvm;
+
+		pdm 	m_pwm;
+		adc 	m_adc;
 
 		struct climateVars vars;
 		bool isClimateSafetyActive();

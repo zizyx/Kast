@@ -1,6 +1,8 @@
 #include "adc.h"
 
-adc::adc(void) {
+adc::adc(uart &serialInterface) : 
+	m_serial(serialInterface)
+{
 	Init();
 }
 

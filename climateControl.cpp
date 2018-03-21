@@ -20,15 +20,16 @@ uint16_t stringToUint16(char* str, uint8_t str_len) {
 climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) : 
     m_baro_inside(BMP280_ADDRESS_INSIDE, twi),
     m_baro_outside(BMP280_ADDRESS_OUTSIDE, twi),
+    m_nvm(serialInterface),
     m_serial(serialInterface),
-    m_clock(clock)
+    m_clock(clock),
+	m_pwm(serialInterface),
+	m_adc(serialInterface)
 {
 	struct plant_t plant;
 	uint8_t plant_crc, plant_nvm_crc;
 
 //	setPlantToGrow(KUSH);
-	adc Adc;
-	nvm Nvm;
 
 	vars.inside_temp = 0;
 	vars.outside_temp = 0;
@@ -47,10 +48,9 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 
 	vars.humidity = 0;
 
-	pdm Pdm;
-	Pdm.setupFanPin(FAN_PIN);
-	Pdm.setupPinTimer();
-	Pdm.setPdm(255);
+	m_pwm.setupFanPin(FAN_PIN);
+	m_pwm.setupPinTimer();
+	m_pwm.setPdm(255);
 
 	setupLampHardware();
 	setupWaterPumpHardware();
@@ -59,9 +59,9 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 
 	// vars.selected_plant = plants[NO_PLANT];
 
-	Nvm.nvmReadBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
-	plant_crc = Nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
-	plant_nvm_crc = Nvm.nvmRead(PLANT_CRC_OFFSET);
+	m_nvm.nvmReadBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
+	plant_crc = m_nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
+	plant_nvm_crc = m_nvm.nvmRead(PLANT_CRC_OFFSET);
 
 	char str[80];
 	sprintf(str, "Plant_crc %u, plant_nvm_crc %u \n", plant_crc, plant_nvm_crc);
@@ -72,12 +72,12 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 
 		plant.id = INVALID_PLANT_ID;
 		plant.growing_started = false;
-		Nvm.nvmWriteBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
+		m_nvm.nvmWriteBlock(PLANT_OFFSET, (uint8_t *)&plant, PLANT_SIZE);
 
-		plant_crc = Nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
-		Nvm.nvmWrite(PLANT_CRC_OFFSET, plant_crc);
+		plant_crc = m_nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
+		m_nvm.nvmWrite(PLANT_CRC_OFFSET, plant_crc);
 	} else if (plant.id != INVALID_PLANT_ID) {
-		// PRINT_STR("Loaded plant from nvm.\n");
+		// PRINT_STR("Loaded plant from m_nvm.\n");
 		//Dan shit uitlezen en doen wat moet. Le maneure is prima.
 	} else {
 		// PRINT_STR("Unkown plant set.\n");
@@ -199,15 +199,15 @@ void climateControl::calculateFanPwmVars() {
 }
 
 uint16_t climateControl::getHumidity(){
-	Adc.setChannel(CHANNEL_ZERO);
-	Adc.startFirstConversion();
+	m_adc.setChannel(CHANNEL_ZERO);
+	m_adc.startFirstConversion();
 	_delay_ms(100); 
 
 	// char string[81] = {"e\n\0"};
-	// sprintf(string, "Adc result is %d.\n", Adc.readAdc());	
+	// sprintf(string, "Adc result is %d.\n", m_adc.readAdc());	
 	// PRINT_STR(string);
 
-	return Adc.readAdc();
+	return m_adc.readAdc();
 }
 
 void climateControl::calculateLampVars(uint8_t lamp_id) {
@@ -235,9 +235,9 @@ void climateControl::setFanHardware() {
 	// PRINT_STR("setFanHardware ");
 	// DEBUG_STR(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
-		Pdm.setPdm(vars.fan_pwm_level);
+		m_pwm.setPdm(vars.fan_pwm_level);
 	} else if (vars.fan_status == FAN_OFF){
-		Pdm.setPdm(MIN_FAN_PWM);
+		m_pwm.setPdm(MIN_FAN_PWM);
 	}
 	//Zet pwm regs
 }
@@ -392,78 +392,61 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			return;
 		}
 	}
-	m_serial.print(string);
-	return;
-
 	// CMD read_nvm_;
 	////////////////////////////////////////////////////////////////////////////////////
-	if (m_serial.isEqual(cmd, (char *)CMD_READ_NVM, cmdLength - CMD_READ_NVM_ARG_LEN, 
-		CMD_READ_NVM_LEN, cmdLength)) {
-		if (cmd[cmdLength - CMD_READ_NVM_ARG_LEN] == '0'){
+	else if (m_serial.isPartEqual(cmd, (char *)CMD_READ_NVM, CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN)) {
+
+		if (cmdLength == CMD_READ_NVM_LEN) {
 			sprintf(string, "Reading NVM Address\n");
 
 			uint8_t nvmBuffer[50];
-			uint16_t startAddress = stringToUint16(cmd + NVM_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
-			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
+			uint16_t startAddress = stringToUint16(cmd + NVM_READ_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
+			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_READ_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
 
 			if(dataLength <= 50){
-				Nvm.nvmReadBlock(startAddress, nvmBuffer, dataLength);
+				m_nvm.nvmReadBlock(startAddress, nvmBuffer, dataLength);
+
+				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+				m_serial.print(string);
+				m_serial.print((char *)nvmBuffer, dataLength);
+				sprintf(string, "\n");
+			} else {
+				sprintf(string, "Reading more than 50 bytes at once is not supported\n");
 			}
 
-			sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
-			// PRINT_STR(string);
-			// PRINT_STR_LEN((char *)nvmBuffer, dataLength);
-			return;
 		} else {
-			return;
+			sprintf(string, "cmdLength %d != than expected length %d\n",
+				cmdLength, CMD_READ_NVM_LEN);
 		}
-	}
-	// CMD write_nvm_;
+
+	// CMD write_nvm_00100_08_01234567;
 	////////////////////////////////////////////////////////////////////////////////////
-	// } else if (m_serial.isEqual(cmd, (char *)CMD_WRITE_NVM, cmdLength - CMD_WRITE_NVM_ARG_LEN, 
-	// 	CMD_WRITE_NVM_LEN, cmdLength)) {
+	} else if (m_serial.isPartEqual(cmd, (char *)CMD_WRITE_NVM, CMD_WRITE_NVM_LEN - CMD_WRITE_NVM_ARG_LEN)) {
 
-// #define END FLUSH
-// #define ESC '|'
-// #define ESC_ESC '|'
-// #define ESC_END '+'
+		uint16_t startAddress = stringToUint16(cmd + NVM_WRITE_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
+		uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_WRITE_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
+		char *buffer = &cmd[CMD_WRITE_NVM_LEN + 1];
 
-// 		uint8_t data_len, byte;
-// 		bool escaping = false;
-// 		uint8_t buffer[50];
+		if (dataLength == (cmdLength - CMD_WRITE_NVM_LEN)) {
+			sprintf(string, "Writing NVM Address\n");
+			m_serial.print(string);
 
-// 		for (uint8_t i = NVM_DATA_LENGTH_OFFSET, j = 0; i < RX_BUFFER_SIZE - 1; i++, j++) {
-// 			byte = (cmd + i);
+			m_nvm.nvmWriteBlock(startAddress, (uint8_t *)buffer, dataLength);
+			//^TODO fuck this +1, the minimum length of a valid cmd + the first data byte
 
-// 			if (escaping == false) {
-// 				if (byte == ESC) {
-// 					escaping = true;
-// 					continue;
-// 				}
+			sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+			m_serial.print(string);
+			m_serial.print(buffer, dataLength);
+			sprintf(string, "\n");
+		} else {
+			sprintf(string, "dataLength %d != different than given length %d\n",
+				dataLength, (cmdLength - CMD_WRITE_NVM_LEN) );
+		}
+	} else {
+			sprintf(string, "Invalid cmd.\n");
+	}
 
-// 				if (byte == END) {
-// 					break;
-// 				}
-// 			} else {
-// 				escaping = false;
-// 				if (byte == ESC_END) {
-// 					buffer[j] = END;
-// 					continue;
-// 				}
-// 			}
-
-
-// 			buffer[j] = byte;		
-// 		}
-
-
-// 		if (cmd[cmdLength - CMD_WRITE_NVM_ARG_LEN] == '0'){
-// 			sprintf(string, "Writing NVM Address\n");
-// 			// setWaterPumpStREAD(NVM_OFF);
-// 		} else {
-// 			return;
-// 		}
-	// }
-	// PRINT_STR(string);
+	m_serial.print(string);
 	// updateHardware();
+	return;
 }

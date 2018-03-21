@@ -32,14 +32,13 @@ typedef  void (climateControl::*callback)(char *, uint8_t);
 class uart {
 	public:
 		uart(void);
-		void print(char *string);
-		void print(char *string, uint8_t len);
+		void print(const char *string);
+		void print(const char *string, uint8_t len);
 		void Transmit(uint8_t data);
-		void TransmitString(char *string, uint8_t len);
 		void checkBuffer(climateControl &c, callback cb);
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength);
 		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength, uint8_t equalLength);
-
+		bool isPartEqual(char *a, char *b, uint8_t validateLength);
 	private:
 		void Init(uint16_t baudrate);
 		uint8_t decodeBuffer(char *rxBuffer, uint8_t len);
