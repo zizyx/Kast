@@ -1,4 +1,5 @@
 #include "nvm.h"
+#include <stdio.h>
 
 volatile uint8_t nvm_timeout_ticks = 0;
 
@@ -47,6 +48,13 @@ uint8_t nvm::calcCrc(uint8_t *data, uint16_t len) {
 }
 
 void nvm::nvmWrite(uint16_t address, uint8_t data) {
+	if(address > NVM_SIZE -1) {
+		char string[80];
+		sprintf(string, "ERROR: address %i > nvm_size %i\n", address, NVM_SIZE);
+		m_serial.print(string);
+		return;
+	}
+
 	// Writing EEPROM should not be interrupted
 	cli();
 	resetTimeout();
@@ -63,6 +71,13 @@ void nvm::nvmWrite(uint16_t address, uint8_t data) {
 }
 
 uint8_t nvm::nvmRead(uint16_t address) {
+	if(address > NVM_SIZE -1) {
+		char string[80];
+		sprintf(string, "ERROR: address %i > nvm_size %i\n", address, NVM_SIZE);
+		m_serial.print(string);
+		return 0;
+	}
+
 	// Reading EEPROM should not be interrupted
 	cli();
 	resetTimeout();

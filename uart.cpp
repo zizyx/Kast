@@ -55,7 +55,6 @@ void uart::checkBuffer(climateControl &c, callback cb)
 		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data 
 			// new_len = decodeBuffer(rxBuffer, i);
 			(c.* cb)(rxBuffer, i);
-//			((climateControl).*(this.callback))(rxBuffer, i);
 			bufferLength = 0;
 		}
 	}

@@ -65,10 +65,10 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 
 	char str[80];
 	sprintf(str, "Plant_crc %u, plant_nvm_crc %u \n", plant_crc, plant_nvm_crc);
-	// PRINT_STR(str);
+	// m_serial.print(str);
 
 	if (plant_nvm_crc != plant_crc) {
-		// PRINT_STR("Plant crc in nvm is incorrect.\n");
+		// m_serial.print("Plant crc in nvm is incorrect.\n");
 
 		plant.id = INVALID_PLANT_ID;
 		plant.growing_started = false;
@@ -77,10 +77,10 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 		plant_crc = m_nvm.calcCrc((uint8_t *)&plant, PLANT_SIZE);
 		m_nvm.nvmWrite(PLANT_CRC_OFFSET, plant_crc);
 	} else if (plant.id != INVALID_PLANT_ID) {
-		// PRINT_STR("Loaded plant from m_nvm.\n");
+		// m_serial.print("Loaded plant from m_nvm.\n");
 		//Dan shit uitlezen en doen wat moet. Le maneure is prima.
 	} else {
-		// PRINT_STR("Unkown plant set.\n");
+		// m_serial.print("Unkown plant set.\n");
 		//INVALID plant maar crc klopt.
 		//printje plant is not set.
 	}
@@ -168,7 +168,7 @@ void climateControl::setFanState(uint8_t status, uint8_t pwm) {
 	}
 
 	vars.fan_pwm_level = pwm;
-	// DEBUG_STR("setFanState");
+	// m_serial.print("setFanState");
 	// m_serial.Transmit(vars.fan_pwm_level);
 }
 
@@ -205,7 +205,7 @@ uint16_t climateControl::getHumidity(){
 
 	// char string[81] = {"e\n\0"};
 	// sprintf(string, "Adc result is %d.\n", m_adc.readAdc());	
-	// PRINT_STR(string);
+	// m_serial.print(string);
 
 	return m_adc.readAdc();
 }
@@ -225,15 +225,15 @@ void climateControl::setPlantToGrow(uint16_t plant_id) {
 
 //HARDWARE setters
 void climateControl::updateHardware() {
-	// PRINT_STR("update hardware");
+	m_serial.print("update hardware");
 	setFanHardware();
 	setLampHardware();
 	setWaterPumpHardware();
 }
 
 void climateControl::setFanHardware() {
-	// PRINT_STR("setFanHardware ");
-	// DEBUG_STR(vars.fan_pwm_level);
+	// m_serial.print("setFanHardware ");
+	// m_serial.print(vars.fan_pwm_level);
 	if (vars.fan_status == FAN_ON){
 		m_pwm.setPdm(vars.fan_pwm_level);
 	} else if (vars.fan_status == FAN_OFF){
@@ -392,7 +392,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			return;
 		}
 	}
-	// CMD read_nvm_;
+	// CMD read_nvm_00100_08;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (m_serial.isPartEqual(cmd, (char *)CMD_READ_NVM, CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN)) {
 
@@ -425,8 +425,9 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 
 		uint16_t startAddress = stringToUint16(cmd + NVM_WRITE_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
 		uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_WRITE_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
-		char *buffer = &cmd[CMD_WRITE_NVM_LEN + 1];
+		char *buffer = &cmd[CMD_WRITE_NVM_LEN];
 
+		// cmdLength -1 because there is a ';' at the end of the data
 		if (dataLength == (cmdLength - CMD_WRITE_NVM_LEN)) {
 			sprintf(string, "Writing NVM Address\n");
 			m_serial.print(string);
