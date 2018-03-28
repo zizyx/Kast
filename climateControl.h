@@ -151,6 +151,8 @@ class climateControl {
 		adc 	m_adc;
 
 		struct climateVars vars;
+		bool decapsulateData(char *buf, uint8_t *len);
+
 		bool isClimateSafetyActive();
 		void updateClimateVars();
 

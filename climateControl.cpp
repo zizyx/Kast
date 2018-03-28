@@ -5,6 +5,7 @@
 
 char string[81] = {"e\n\0"};
 
+
 uint16_t stringToUint16(char* str, uint8_t str_len) {
 	double val = 0;
 	for (int i = 0, j = str_len - 1; i < str_len; i++, j--) {
@@ -85,6 +86,38 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 		//printje plant is not set.
 	}
 
+}
+
+bool climateControl::decapsulateData(char *buf, uint8_t *len) {
+	bool escaping = false;
+	uint8_t esc_cnt = 0;
+
+	for (uint8_t i = 0; i < *len; i++) {
+		if (escaping == false) {
+			if (buf[i] == ESC) {
+				escaping = true;
+				esc_cnt++;
+				continue;
+			}
+		} else {
+			escaping = false;
+
+			if (buf[i] == ESC_END) {
+				buf[i - esc_cnt] = FLUSH;
+			} else if (buf[i] == ESC_ESC) {
+				buf[i - esc_cnt] = ESC;
+			} else {
+				m_serial.print("Received non escape char after prev ESC character.\n");
+				return false;
+			}
+			continue;
+		}
+		buf[i - esc_cnt] = buf[i];
+	}
+
+	(*len) -= esc_cnt;
+
+	return true;
 }
 
 //Configure the pins as: output, no_pull, driven low
@@ -419,7 +452,8 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 				cmdLength, CMD_READ_NVM_LEN);
 		}
 
-	// CMD write_nvm_00100_08_01234567;
+	// CMD write_nvm_00100_08_0123;567;
+	// CMD write_nvm_00100_08_0123|+567;
 	////////////////////////////////////////////////////////////////////////////////////
 	} else if (m_serial.isPartEqual(cmd, (char *)CMD_WRITE_NVM, CMD_WRITE_NVM_LEN - CMD_WRITE_NVM_ARG_LEN)) {
 
@@ -428,19 +462,24 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		char *buffer = &cmd[CMD_WRITE_NVM_LEN];
 
 		// cmdLength -1 because there is a ';' at the end of the data
-		if (dataLength == (cmdLength - CMD_WRITE_NVM_LEN)) {
-			sprintf(string, "Writing NVM Address\n");
-			m_serial.print(string);
+		if (dataLength <= (cmdLength - CMD_WRITE_NVM_LEN)) {
+			m_serial.print("Writing NVM Address\n");
 
-			m_nvm.nvmWriteBlock(startAddress, (uint8_t *)buffer, dataLength);
-			//^TODO fuck this +1, the minimum length of a valid cmd + the first data byte
+			//decapsulate data
+			dataLength = (cmdLength - CMD_WRITE_NVM_LEN);
+			if (decapsulateData(buffer, &dataLength) == false) {
+				sprintf(string, "\tData could not be decapsulated\n");
+			} else {
+				m_nvm.nvmWriteBlock(startAddress, (uint8_t *)buffer, dataLength);
+				//^TODO fuck this +1, the minimum length of a valid cmd + the first data byte
 
-			sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
-			m_serial.print(string);
-			m_serial.print(buffer, dataLength);
-			sprintf(string, "\n");
+				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+				m_serial.print(string);
+				m_serial.print(buffer, dataLength);
+				sprintf(string, "\n");
+			}
 		} else {
-			sprintf(string, "dataLength %d != different than given length %d\n",
+			sprintf(string, "dataLength %d > than given length %d\n",
 				dataLength, (cmdLength - CMD_WRITE_NVM_LEN) );
 		}
 	} else {

@@ -61,47 +61,6 @@ void uart::checkBuffer(climateControl &c, callback cb)
 	// print(rxBuffer + '\0');
 }
 
-
-uint8_t uart::decodeBuffer(char *rxBuffer, uint8_t len) {
-		uint8_t byte, new_len;
-		bool escaping = false;
-		char *buffer;
-		uint8_t i, j, nr_escaped;
-
-		buffer = (char *)calloc(len, sizeof(char));
-		new_len = 0;
-		nr_escaped = 0;
-
-		for (i = 0, j = 0; i < len; i++, j++) {
-			byte = rxBuffer[i];
-
-			if (escaping == false) {
-				if (byte == ESC) {
-					escaping = true;
-					continue;
-				}
-			} else {
-				nr_escaped++;
-				escaping = false;
-				if (byte == ESC_END) {
-					buffer[j] = END;
-					continue;
-				}
-
-				if (byte == ESC_ESC) {
-					buffer[j] = ESC;
-					continue;
-				}
-			}
-			buffer[j] = byte;
-		}
-		memcpy(rxBuffer, buffer, len - nr_escaped);
-
-		free(buffer);
-
-		return len;
-}
-
 //cmd,  write_nvm_00100_08_01234567;
 // m_serial.isPartEqual("write_nvm_00100_08_01234567", "write_nvm_01024_50_", 27 - 9, 19)
 bool uart::isPartEqual(char *a, char *b, uint8_t validateLength) {
