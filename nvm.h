@@ -12,7 +12,7 @@
 #define	EEPROM_VALID_VAL					0xAF
 #define	EEPROM_VALID_OFFSET					NVM_BASE
 #define EEPROM_ERASE_VAL					0x00
-#define NVM_TIMEOUT_TIME					2	
+#define NVM_TIMEOUT_TIME					20	
 
 extern volatile uint8_t nvm_timeout_ticks;
 
