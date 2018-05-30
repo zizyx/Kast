@@ -253,7 +253,8 @@ EXTRALIBDIRS =
 # only used for heap (malloc()).
 #EXTMEMOPTS = -Wl,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff
 
-EXTMEMOPTS =
+EXTMEMOPTS = -Wl,--defsym=__heap_end=0x08ff,--defsym=__heap_start=0x0100,
+# Maybe we can enable the data (const section) in the makefile? ,.data=0x801100
 
 
 
