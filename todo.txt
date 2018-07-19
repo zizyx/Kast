@@ -34,11 +34,12 @@ o Set plant COMMAND (uart) --> python which will parse a JSON file.
 ****************************************************************************
 *                                   bugs                                   *
 ****************************************************************************
-1 We can not send 2 different subsequential commands.
-  REPRODUCTION BUG:
-    send "get_clock;"
-    send "get_temp_0;"
-    error,
+
 2 DecodeBuffer changes something we dont know about.
+ - We can calloc and make the buf point to it
+ - We cannot write to buf after calloc
+   Print pointers.
+   try to set a value.
+
 3 Clock changed the date somewhere between 1 (most likely 9) januari and 1 
   februari to the year 2120. 

@@ -88,53 +88,61 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 
 }
 
-void climateControl::encapsulate(char *buf, uint8_t *len) {
-#define STUK
-#ifdef STUK
-	char *result;
-#else
-	char result[50];
-#endif
-	uint8_t old_len;
+/* For each character that needs to be encapsulated, the resulting
+ * buffer length will increase by 1 byte (index).
+ * Therefore this function frees the non-encapsulated buffer passed
+ * to this function and points this to the resulting encapsulated buffer.
+ *
+ * !IMPORTANT: The caller of this function must free the buffer passed
+ * to this function. */
+void climateControl::encapsulate(char *buf[], uint8_t *len) {
+	// char *result;
+	// uint8_t old_len;
 
-	old_len = *len;
+	// old_len = *len;
 
-	//First a test run to check how many we need to escape.
-	for (uint8_t i = 0; i < *len; i++) {
-		if (buf[i] == FLUSH) {
-			++*len;
-		}
+	// // //First a test run to check how many we need to escape.
+	// // for (uint8_t i = 0; i < old_len; i++) {
+	// // 	if (*buf[i] == FLUSH) {
+	// // 		++*len;
+	// // 	}
 
-		if (buf[i] == ESC) {
-			++*len;
-		}
+	// // 	if (*buf[i] == ESC) {
+	// // 		++*len;
+	// // 	}
+	// // }
+
+	// char str[80];
+	// sprintf(str, "old_len %u, new %u \n", old_len, *len);
+	// m_serial.print(str);
+
+	*buf = (char*)calloc(*len, sizeof(char));
+
+	for (char i = 1; i < *len; i++) {
+		**buf = i;
+		// *buf++; << ++ dit
 	}
 
-	char str[80];
-	sprintf(str, "old_len %u, new %u \n", old_len, *len);
-	m_serial.print(str);
+	// m_serial.print(*buf, old_len);
+	// sprintf(str, "\n");
+	// m_serial.print(str);
 
-#ifdef STUK
-	result = (char *)calloc(10, sizeof(char));
-#endif
 
-	for (uint8_t i = 0, j = 0; i < old_len; i++, j++) {
-		if (buf[i] == FLUSH) {
-			result[j++] = ESC;
-			result[j] = ESC_END;
-		} else if (buf[i] == ESC) {
-			result[j++] = ESC;
-			result[j] = ESC_ESC;
-		} else {
-			result[j] = buf[i];
-		}
-	}
+	// for (uint8_t i = 0, j = 0; i < old_len; i++, j++) {
+	// 	// if (*buf[i] == FLUSH) {
+	// 	// 	result[j] = ESC;
+	// 	// 	result[++j] = ESC_END;
+	// 	// } else if (*buf[i] == ESC) {
+	// 	// 	result[j] = ESC;
+	// 	// 	result[++j] = ESC_ESC;
+	// 	// } else {
+	// 		// result[j] = buf[i];
+	// 	// }
+	// }
 
-	//Free the old buffer, then assign the new one to buf.
-//	buf = result;
-#ifdef STUK
-	free(result);
-#endif
+	//Free the old *buffer, then assign the new one to *buf.
+	// buf = &result;
+	// free(*buf);
 }
 
 bool climateControl::decapsulateData(char *buf, uint8_t *len) {
@@ -481,15 +489,13 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		if (cmdLength == CMD_READ_NVM_LEN) {
 			sprintf(string, "Reading NVM Address\n");
 
-			char nvmBuffer[50];
-			// char *nvmBuffer = (char*)calloc(50, sizeof(char));
-
 			uint16_t startAddress = stringToUint16(cmd + NVM_READ_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
 			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_READ_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
 
+			char *nvmBuffer = (char*)calloc(50, sizeof(char));
 			if(dataLength <= 50){
-//				m_nvm.nvmReadBlock(startAddress, (uint8_t *)nvmBuffer, dataLength);
-				encapsulate(nvmBuffer, &dataLength);
+				m_nvm.nvmReadBlock(startAddress, (uint8_t *)nvmBuffer, dataLength);
+				encapsulate(&nvmBuffer, &dataLength);
 
 				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
 				m_serial.print(string);
