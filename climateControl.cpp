@@ -19,11 +19,11 @@ uint16_t stringToUint16(char* str, uint8_t str_len) {
 }
 
 climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) : 
-    m_baro_inside(BMP280_ADDRESS_INSIDE, twi),
-    m_baro_outside(BMP280_ADDRESS_OUTSIDE, twi),
-    m_nvm(serialInterface),
-    m_serial(serialInterface),
-    m_clock(clock),
+	m_baro_inside(BMP280_ADDRESS_INSIDE, twi),
+	m_baro_outside(BMP280_ADDRESS_OUTSIDE, twi),
+	m_nvm(serialInterface),
+	m_serial(serialInterface),
+	m_clock(clock),
 	m_pwm(serialInterface),
 	m_adc(serialInterface)
 {
@@ -88,61 +88,78 @@ climateControl::climateControl(i2c &twi, uart &serialInterface, DS_3231 &clock) 
 
 }
 
-/* For each character that needs to be encapsulated, the resulting
- * buffer length will increase by 1 byte (index).
- * Therefore this function frees the non-encapsulated buffer passed
- * to this function and points this to the resulting encapsulated buffer.
- *
- * !IMPORTANT: The caller of this function must free the buffer passed
- * to this function. */
-void climateControl::encapsulate(char *buf[], uint8_t *len) {
-	// char *result;
-	// uint8_t old_len;
 
-	// old_len = *len;
+void climateControl::printArr(char *buf, uint8_t len) {
+	for (uint8_t i = 0; i < len; i++) {
+		m_serial.Transmit(buf[i]);
+	}	
 
-	// // //First a test run to check how many we need to escape.
-	// // for (uint8_t i = 0; i < old_len; i++) {
-	// // 	if (*buf[i] == FLUSH) {
-	// // 		++*len;
-	// // 	}
+	m_serial.Transmit('\n');
+}
 
-	// // 	if (*buf[i] == ESC) {
-	// // 		++*len;
-	// // 	}
-	// // }
+void climateControl::printArrAsHex(char *buf, uint8_t len) {
+	char lsb, msb;
 
-	// char str[80];
-	// sprintf(str, "old_len %u, new %u \n", old_len, *len);
-	// m_serial.print(str);
+	for (uint8_t i = 0; i < len; i++) {
+		lsb = buf[i] & 0x0f;
+		msb = (buf[i] >> 4) & 0x0f;
 
-	*buf = (char*)calloc(*len, sizeof(char));
+//		m_serial.print("0x");
 
-	for (char i = 1; i < *len; i++) {
-		**buf = i;
-		// *buf++; << ++ dit
+		if (msb < 10)
+			m_serial.Transmit(msb + '0');
+		else
+			m_serial.Transmit(msb + 'A' - 10);
+
+		if (lsb < 10)
+			m_serial.Transmit(lsb + '0');
+		else
+			m_serial.Transmit(lsb + 'A' - 10);
+
+		m_serial.Transmit(' ');
+	}	
+
+	m_serial.Transmit('\n');
+}
+
+void climateControl::encapsulate(char **buf, uint8_t *len) {
+	// char string[80];
+	char *new_buf;
+	uint8_t old_len;
+
+	old_len = *len;
+
+	/* Determine the new buffer length.
+	 * Check how many we need to escape. */
+	for (uint8_t i = 0; i < old_len; i++) {
+		if ((*buf)[i] == FLUSH) {
+			(*len)++;
+		} else if ((*buf)[i] == ESC) {
+			(*len)++;
+		}
 	}
 
-	// m_serial.print(*buf, old_len);
-	// sprintf(str, "\n");
-	// m_serial.print(str);
+	/* Store address of the new calloced buffer. */
+	new_buf = (char *)calloc(sizeof(char), *len);
 
+	/* NOTE: free also zeroes the old buffer. Therfore we need to
+	 * write our data to new_buf instead of buf. */
+	for (uint8_t i = 0, j = 0; i < old_len; i++, j++) {
+		char b = (*buf)[i];
 
-	// for (uint8_t i = 0, j = 0; i < old_len; i++, j++) {
-	// 	// if (*buf[i] == FLUSH) {
-	// 	// 	result[j] = ESC;
-	// 	// 	result[++j] = ESC_END;
-	// 	// } else if (*buf[i] == ESC) {
-	// 	// 	result[j] = ESC;
-	// 	// 	result[++j] = ESC_ESC;
-	// 	// } else {
-	// 		// result[j] = buf[i];
-	// 	// }
-	// }
+		if (b == FLUSH) {
+			new_buf[j] = ESC;
+			new_buf[++j] = ESC_END;
+		} else if (b == ESC) {
+			new_buf[j] = ESC;
+			new_buf[++j] = ESC_ESC;
+		} else {
+			new_buf[j] = b;
+		}
+	}
 
-	//Free the old *buffer, then assign the new one to *buf.
-	// buf = &result;
-	// free(*buf);
+	free(*buf);
+	*buf = new_buf;
 }
 
 bool climateControl::decapsulateData(char *buf, uint8_t *len) {
@@ -354,14 +371,14 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	////////////////////////////////////////////////////////////////////////////////////
 	if (m_serial.isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
 		sprintf(string, "Turning fan on.\n");
-	 	setFanState(FAN_ON);
+		setFanState(FAN_ON);
 	} 
 	
 	// CMD fan_off;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
 		sprintf(string, "Turning off fan.\n");
-	 	setFanState(FAN_OFF);
+		setFanState(FAN_OFF);
 	} 
 
 	
@@ -374,7 +391,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		fan_pwm_level = stringToUint16(cmd + (CMD_FAN_LVL_LEN - CMD_FAN_LVL_ARG_LEN), CMD_FAN_LVL_ARG_LEN);
 
 		sprintf(string, "Updating fan lvl to %d\n", fan_pwm_level);
-	 	setFanState(FAN_ON, fan_pwm_level);
+		setFanState(FAN_ON, fan_pwm_level);
 	} 
 	
 	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
@@ -497,6 +514,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 				m_nvm.nvmReadBlock(startAddress, (uint8_t *)nvmBuffer, dataLength);
 				encapsulate(&nvmBuffer, &dataLength);
 
+				m_serial.print("Array contains "); printArr(nvmBuffer, dataLength);
 				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
 				m_serial.print(string);
 				m_serial.print((char *)nvmBuffer, dataLength);
@@ -536,8 +554,8 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 				sprintf(string, "\n");
 			}
 		} else {
-			sprintf(string, "dataLength %d > than given length %d\n",
-				dataLength, (cmdLength - CMD_WRITE_NVM_LEN) );
+			sprintf(string, "dataLength %d < than given length %d\n",
+			dataLength, (cmdLength - CMD_WRITE_NVM_LEN) );
 		}
 	} else {
 			sprintf(string, "Invalid cmd.\n");

@@ -157,6 +157,9 @@ class climateControl {
 		bool isClimateSafetyActive();
 		void updateClimateVars();
 
+		void printArr(char *buf, uint8_t len);
+		void printArrAsHex(char *buf, uint8_t len);
+
 		void setLampState(uint8_t lamp_id, uint8_t status);
 		void setFanState(uint8_t status, uint8_t pwm);
 		void setFanState(uint8_t status);

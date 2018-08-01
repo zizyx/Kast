@@ -25,8 +25,8 @@ o Really very, like, a lot.
 *                         Python Client/Embedded                           *
 o Set plant COMMAND (uart) --> python which will parse a JSON file. 
 
-
-
+o script aanpassen dat newline std aan staat
+o print wrapper + overloads
 
 
 
