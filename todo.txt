@@ -10,6 +10,7 @@ o Implement watchdog again.
 
 o print wrapper + overloads
 
+o crop I2c error messages into one function with the while loop
 
 
 
