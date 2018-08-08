@@ -4,11 +4,12 @@
 
 #include "i2c.h"
 #include <avr/interrupt.h>
-#include "uart.h"
 
 volatile uint8_t i2c_timeout_ticks = 0;
 
-i2c::i2c() {
+i2c::i2c(uart &serialInterface) : 
+	m_serial(serialInterface)
+{
 	Init();
 }
 
@@ -21,7 +22,7 @@ void i2c::resetTimeout() {
 
 bool i2c::didI2cTimeout() {
 	if (i2c_timeout_ticks >= I2C_TIMEOUT_TIME) {
-		// DEBUG_STR("I2C Error: Did timeout\n"); //TODO DEBUG kan uit, error print?
+		m_serial.print("I2C Error: Did timeout\n"); //TODO DEBUG kan uit, error print?
 		return true;
 	}
 	return false;
@@ -75,11 +76,14 @@ void i2c::ReadRegisterFlow(uint8_t address, uint8_t reg, uint8_t cnt, uint8_t *b
 
 	uint8_t readAddress;
 
-	SendStartBit();
+	if (SendStartBit() == false)
+		return;
+
 
 	// SLAVE ADRESSS PLUS WRITE
 	readAddress = ((address << 1) & 0xFE);
-	SendByte(readAddress); //inc ack
+	if (SendByte(readAddress) == false) //inc ack
+		return;
 
 	//Word addre / reg
 	SendByte(reg); //inc ack
@@ -150,7 +154,7 @@ void i2c::SendStopBit(void){
 	while((!didI2cTimeout()) && (TWCR & (1<<TWSTO)) ==  0x00);
 }
 
-void i2c::SendStartBit(void){
+bool i2c::SendStartBit(void){
 	//SEND START CONDITION 
 	TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
 	
@@ -175,6 +179,11 @@ void i2c::SendStartBit(void){
 		// debug->Transmit(TWSR);
 	}
 
+	if (didI2cTimeout())
+		return false;
+
+	return true;
+
 }
 
 uint8_t i2c::ReadByte(bool nack){
@@ -187,11 +196,14 @@ uint8_t i2c::ReadByte(bool nack){
 	i2c_timeout_ticks = 0;
 	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for data */
 
+	if (didI2cTimeout())
+		return 0;
+
 	//return recieved data
 	return TWDR;	
 }
 
-void i2c::SendByte(uint8_t data){
+bool i2c::SendByte(uint8_t data){
 		// DATA TO BE SENT
 		TWDR = data;
 		TWCR = (1<<TWINT) | (1<<TWEN);
@@ -201,6 +213,11 @@ void i2c::SendByte(uint8_t data){
 		i2c_timeout_ticks = 0;
 		sei();
 		while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
+
+		if (didI2cTimeout())
+			return false;
+
+		return true;
 }
 
 void i2c::Write(uint8_t address, uint8_t reg){
@@ -209,9 +226,7 @@ void i2c::Write(uint8_t address, uint8_t reg){
 
 void i2c::WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData){
 	SendStartBit();
-
 	WriteDataRaw(address, reg, data, withData);
-
 	SendStopBit();	
 }
 

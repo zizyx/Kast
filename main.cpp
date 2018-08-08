@@ -10,28 +10,28 @@
 #include "DS_3231.h"
 
 int main(){
-	uart debug;
-	i2c twi;
+	/* The order of m_clock, m_alarm and m_timer need to be created in this order. */
 	DS_3231 m_clock;
-
 	alarm m_alarm(m_clock);
+	systemTimer m_timer(m_clock, m_alarm);
 
-	climateControl cctl(twi, debug, m_clock);
+	uart m_debug;
+	i2c m_twi(m_debug);
+	climateControl m_cctl(m_twi, m_debug, m_clock);
 
 	// DS_3231 *clock = DS_3231::getInstance();
 	// char string[81];
 
-	// systemTimer *timer = systemTimer::getInstance();
 	// nvm *nvm = nvm::getInstance();
 
 	while(1){
-//		debug.callback = &climateControl::handleCmd;
+//		m_debug.callback = &climateControl::handleCmd;
 
-		debug.checkBuffer(cctl, &climateControl::handleCmd);
-//		debug.checkBuffer();
+		m_debug.checkBuffer(m_cctl, &climateControl::handleCmd);
+//		m_debug.checkBuffer();
 		// PRINT_STR("TEST");
-		// timer->oncePerSecondTimer();
-		// timer->oncePerTenSecondsTimer();
+		m_timer.oncePerSecondTimer();
+		// m_timer.oncePerTenSecondsTimer();
 
 		///////////////////////////////////////////////////////////
 		// EEPROM TEST
@@ -48,7 +48,7 @@ int main(){
 		// for (uint8_t j = 0; j < 10; j++)
 		// {
 		// 	sprintf(string, "Memory is %d.\n", array2[j]);	
-		// 	debug->print(string);
+		// 	m_debug->print(string);
 		// }
 		// _delay_ms(1000);
 		///////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ int main(){
 		// Adc->startFirstConversion();
 		// _delay_ms(1000); 
 		// sprintf(string, "Adc result is %d.\n", Adc->readAdc());	
-		// debug->TransmitString(string);
+		// m_debug->TransmitString(string);
 		// _delay_ms(1);
 
 		// sprintf(string, "Datetime: %s\n", clock->getCurrentTime().toString());

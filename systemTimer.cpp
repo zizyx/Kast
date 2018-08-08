@@ -40,13 +40,20 @@ void systemTimer::disable(){
 }
 
 void systemTimer::oncePerTenSecondsTimer(){
+	datetime_t now;
+
 	if(timerTenSecTicks >= 100){
 		cli();	
 		timerTenSecTicks = 0;
-		timerOneSecTicks = 0;
 		sei();
-		m_alarm.addNewAlarm((m_clock.getCurrentTime() + datetime_t(3,0,0,0,0,0,0)));
-		m_alarm.checkAlarms();
+
+		now = m_clock.getCurrentTime();
+
+		if (IS_TIME_VALID(now)) {
+//			m_alarm.addNewAlarm((now + datetime_t(3,0,0,0,0,0,0)));
+		}
+
+//		m_alarm.checkAlarms();
 	}
 }
 

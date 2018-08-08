@@ -21,6 +21,7 @@ uint8_t BMP_280::ReadTemperatureRound() {
 
 void BMP_280::ReadTempRegisters(){
 	// Start command
+	
 	m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);			
 
 	bmp280_data.msb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_MSB);

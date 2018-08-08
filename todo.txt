@@ -8,6 +8,7 @@ o Working out the flushes in uart, handler of data in commands (nvm).
  
 o Implement watchdog again.
 
+o print wrapper + overloads
 
 
 
@@ -25,8 +26,6 @@ o Really very, like, a lot.
 *                         Python Client/Embedded                           *
 o Set plant COMMAND (uart) --> python which will parse a JSON file. 
 
-o script aanpassen dat newline std aan staat
-o print wrapper + overloads
 
 
 
@@ -34,12 +33,6 @@ o print wrapper + overloads
 ****************************************************************************
 *                                   bugs                                   *
 ****************************************************************************
-
-2 DecodeBuffer changes something we dont know about.
- - We can calloc and make the buf point to it
- - We cannot write to buf after calloc
-   Print pointers.
-   try to set a value.
 
 3 Clock changed the date somewhere between 1 (most likely 9) januari and 1 
   februari to the year 2120. 

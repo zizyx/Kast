@@ -364,7 +364,7 @@ void climateControl::setWaterPumpHardware() {
 void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	// reading incoming string
 	for(uint8_t i = 0; i < cmdLength; i++){
-		// m_serial.Transmit(cmd[i]); //Echo what is sent to the device	
+		m_serial.Transmit(cmd[i]); //Echo what is sent to the device	
 	}
 	
 	// CMD fan_on;
@@ -413,7 +413,6 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (m_serial.isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
 		datetime_t tempTime = m_clock.getCurrentTime();
-
 
 		sprintf(string, "Current datetime is %s\n", tempTime.toString());
 	} 

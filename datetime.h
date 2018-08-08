@@ -4,6 +4,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#define INVALID_DATE_TIME           datetime_t(0, 0, 0, 0, 0, 0, 2000)
+#define IS_TIME_INVALID(x)          ((x == INVALID_DATE_TIME) ? true : false)
+#define IS_TIME_VALID(x)            (!IS_TIME_INVALID(x))
+
 enum Day { monday = 1, tuesday, wednesday, thursday, friday, saturday, sunday};
 
 struct datetime_t {
