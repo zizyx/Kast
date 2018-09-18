@@ -103,17 +103,19 @@ class DS_3231 {
 		DS_3231(void);
 		uint16_t ReadTemperature();
 		void getTimeVarsAsString(char *string);
-		datetime_t getCurrentTime();
+		bool getCurrentTime(datetime_t *time);
 		void testing(char* string);
-		void setTime(datetime_t datetime);
+		bool setTime(datetime_t datetime);
+
 	private:
 		i2c *I2C;
 		uart *debug;
 
 		char* dayToString(uint8_t day);
-		void ReadClockRegisters();
-		void ReadTempRegisters();
+		bool ReadClockRegisters();
+		bool ReadTempRegisters();
 		void calcClock();
 };
+
 
 #endif

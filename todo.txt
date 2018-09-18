@@ -4,8 +4,6 @@
 
 
 *                                 Embedded                                 *
-o Working out the flushes in uart, handler of data in commands (nvm).
- 
 o Implement watchdog again.
 
 o print wrapper + overloads

@@ -9,9 +9,10 @@ static DS3231_data clk_data;
 DS_3231::DS_3231(){
 }
 
-void DS_3231::ReadClockRegisters(){
+bool DS_3231::ReadClockRegisters(){
 	uint8_t buffer[7];
-	I2C->ReadRegisterFlow(DS3231_ADRESS, DS3231_REGISTER_SECONDS, REGISTER_AMOUNT, buffer);
+	if (I2C->ReadRegisterFlow(DS3231_ADRESS, DS3231_REGISTER_SECONDS, REGISTER_AMOUNT, buffer) == false)
+		return false;
 
 	clk_data.reg_seconds 			= DS_3231_GET_VAL( buffer[0], 	DS_3231_SECONDS_MASK, 		DS_3231_SECONDS_POSITION)
 								+ (10 * DS_3231_GET_VAL( buffer[0], 	DS_3231_TEN_SECONDS_MASK, 	DS_3231_TEN_SECONDS_POSITION ));
@@ -44,6 +45,8 @@ void DS_3231::ReadClockRegisters(){
 		clk_data.reg_date,
 		clk_data.reg_month,
 		clk_data.reg_year);
+
+	return true;
 }
 
 uint16_t DS_3231::ReadTemperature(){
@@ -51,24 +54,33 @@ uint16_t DS_3231::ReadTemperature(){
 	return clk_data.reg_temp;
 }
 
-void DS_3231::ReadTempRegisters(){
-	clk_data.reg_temp = I2C->ReadRegisteru8(DS3231_ADRESS, DS3231_REGISTER_TEMP_MSB);
+bool DS_3231::ReadTempRegisters(){
+	return I2C->ReadRegisteru8(DS3231_ADRESS, DS3231_REGISTER_TEMP_MSB, &clk_data.reg_temp);
 }
 
-datetime_t DS_3231::getCurrentTime() {
-	ReadClockRegisters();
+bool DS_3231::getCurrentTime(datetime_t *time) {
+	//TODO fix dit met een boolean voor faal success
+	if (ReadClockRegisters() == false)
+		return false;
 
-	return clk_data.datetime;
+	*time = clk_data.datetime;
+//	memcpy(&clk_data.datetime, time, sizeof(datetime_t)); 
+
+	return true;
 }
 
-void DS_3231::getTimeVarsAsString(char *string) {
-	getCurrentTime();
+void DS_3231::getTimeVarsAsString(char *string) {	
+	datetime_t time;
 
-	sprintf(string, "%s\n",
-		clk_data.datetime.toString());
+	if (getCurrentTime(&time) == false) {
+		sprintf(string, "ERROR: Could not get clock.\n");
+		return;
+	}
+
+	sprintf(string, "%s\n", time.toString());
 }
 
-void DS_3231::setTime(datetime_t datetime) {
+bool DS_3231::setTime(datetime_t datetime) {
 	uint8_t sec_reg = DS_3231_SET_SECONDS(datetime.seconds);
 	uint8_t min_reg = DS_3231_SET_MINUTES(datetime.minutes);
 	uint8_t hr_reg = DS_3231_SET_HOURS(datetime.hours);
@@ -77,13 +89,22 @@ void DS_3231::setTime(datetime_t datetime) {
 	uint8_t mn_reg = DS_3231_SET_MONTH(datetime.month, datetime.year);
 	uint8_t yr_reg = DS_3231_SET_YEAR(datetime.year);
 
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_SECONDS, sec_reg, true);
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_MINUTES, min_reg, true);
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_HOURS, hr_reg, true);
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_DAY, dy_reg, true);
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_DATE, dt_reg, true);
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_MONTH, mn_reg, true);
-	I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_YEAR, yr_reg, true);
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_SECONDS, sec_reg, true) == false)
+		return false;
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_MINUTES, min_reg, true) == false)
+		return false;
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_HOURS, hr_reg, true) == false)
+		return false;
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_DAY, dy_reg, true) == false)
+		return false;
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_DATE, dt_reg, true) == false)
+		return false;
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_MONTH, mn_reg, true) == false)
+		return false;
+	if (I2C->WriteData(DS3231_ADRESS, DS3231_REGISTER_YEAR, yr_reg, true) == false)
+		return false;
+
+	return true;
 }
 
 char* DS_3231::dayToString(uint8_t day){

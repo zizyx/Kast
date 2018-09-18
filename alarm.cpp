@@ -33,7 +33,10 @@ void alarm::addNewAlarm(datetime_t executeTime) {
 }
 
 void alarm::checkAlarms(){
-	datetime_t now = m_clock.getCurrentTime();
+	datetime_t now;
+
+	if (m_clock.getCurrentTime(&now) == false)
+		return;
 
 // 	if (IS_TIME_INVALID(now))
 // 		return;

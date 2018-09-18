@@ -47,7 +47,8 @@ void systemTimer::oncePerTenSecondsTimer(){
 		timerTenSecTicks = 0;
 		sei();
 
-		now = m_clock.getCurrentTime();
+		if (m_clock.getCurrentTime(&now) == false)
+			return; //TODO Correct error handling when clock is insane.
 
 		if (IS_TIME_VALID(now)) {
 //			m_alarm.addNewAlarm((now + datetime_t(3,0,0,0,0,0,0)));

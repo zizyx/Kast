@@ -19,18 +19,31 @@ uint8_t BMP_280::ReadTemperatureRound() {
 	return (uint8_t)(ReadTemperature() / 100);
 }
 
-void BMP_280::ReadTempRegisters(){
+bool BMP_280::ReadTempRegisters(){
 	// Start command
 	
-	m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);			
+	if (m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true) == false)
+		return false;			
 
-	bmp280_data.msb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_MSB);
-	bmp280_data.lsb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_LSB);
-	bmp280_data.xlsb_temp = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_XLSB);
+	if (m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_MSB, &bmp280_data.msb_temp) == false)
+		return false;
 
-	bmp280_data.digt1 = m_i2c.ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_T1);
-	bmp280_data.digt2 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T2);
-	bmp280_data.digt3 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T3);
+	if (m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_LSB, &bmp280_data.lsb_temp) == false)
+		return false;
+
+	if (m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_TEMP_XLSB, &bmp280_data.xlsb_temp) == false)
+		return false;
+
+	if (m_i2c.ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_T1, &bmp280_data.digt1) == false)
+		return false;
+
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T2, &bmp280_data.digt2) == false)
+		return false;
+
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_T3, &bmp280_data.digt3) == false)
+		return false;
+
+	return true;
 }
 
 void BMP_280::TempCalc(void) {
@@ -68,22 +81,37 @@ uint8_t BMP_280::ReadPressureRound() {
 	return (uint8_t)(ReadPressure() / 100);
 }
 
-void BMP_280::ReadPressureRegisters(){
-	m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true);	
+bool BMP_280::ReadPressureRegisters(){
+	if (m_i2c.WriteData(bmp280_data.address, BMP280_REGISTER_CTRL_MEAS, BMP280_START_MEASUREMENT, true) == false)
+		return false;	
 
-	bmp280_data.msb_pres = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_MSB);
-	bmp280_data.lsb_pres = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_LSB);
-	bmp280_data.xlsb_pres = m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_XLSB);
+	if (m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_MSB, &bmp280_data.msb_pres) == false)
+		return false;
+	if (m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_LSB, &bmp280_data.lsb_pres) == false)
+		return false;
+	if (m_i2c.ReadRegisteru8(bmp280_data.address, BMP280_REGISTER_PRESSURE_XLSB, &bmp280_data.xlsb_pres) == false)
+		return false;
 
-	bmp280_data.digp1 = m_i2c.ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_P1);
-	bmp280_data.digp2 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P2);
-	bmp280_data.digp3 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P3);
-	bmp280_data.digp4 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P4);
-	bmp280_data.digp5 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P5);
-	bmp280_data.digp6 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P6);
-	bmp280_data.digp7 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P7);
-	bmp280_data.digp8 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P8);
-	bmp280_data.digp9 = m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P9);
+	if (m_i2c.ReadRegisteru16LE(bmp280_data.address, BMP280_REGISTER_DIG_P1, &bmp280_data.digp1) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P2, &bmp280_data.digp2) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P3, &bmp280_data.digp3) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P4, &bmp280_data.digp4) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P5, &bmp280_data.digp5) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P6, &bmp280_data.digp6) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P7, &bmp280_data.digp7) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P8, &bmp280_data.digp8) == false)
+		return false;
+	if (m_i2c.ReadRegisters16LE(bmp280_data.address, BMP280_REGISTER_DIG_P9, &bmp280_data.digp9) == false)
+		return false;
+
+	return true;
 }
 
 

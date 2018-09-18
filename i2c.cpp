@@ -34,94 +34,104 @@ void i2c::SendNack(void){
 	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for nack */
 }
 
-uint8_t i2c::ReadRegisteru8(uint8_t address, uint8_t reg){
+bool i2c::ReadRegisteru8(uint8_t address, uint8_t reg, uint8_t *value) {
+	bool result;
+
 	Write(address, reg);
 	SendReadSlave(address);
-	uint8_t value = ReadByte(true);
-	SendStopBit();
-	return value;
+	result = ReadByte(true, value);
+	if (result == false)
+		return false;
+
+	result = SendStopBit();
+	if (result == false)
+		return false;
+
+	return true;
 }
 
-int16_t i2c::ReadRegisters16LE(uint8_t address, uint8_t reg){
-	return (int16_t)ReadRegisteru16LE(address, reg);
-}
-
-
-uint16_t i2c::ReadRegisteru16LE(uint8_t address, uint8_t reg){
-	uint16_t value;
-
-	value = ReadRegisteru16(address, reg);
-
-	value = ((value >> 8) | (value << 8));
-
-	return value;
+bool i2c::ReadRegisters16LE(uint8_t address, uint8_t reg, int16_t *value) {
+	return ReadRegisteru16LE(address, reg, (uint16_t *)value);
 }
 
 
-uint16_t i2c::ReadRegisteru16(uint8_t address, uint8_t reg){
-	uint16_t value;
+bool i2c::ReadRegisteru16LE(uint8_t address, uint8_t reg, uint16_t *value) {
+	bool result;
+
+	result = ReadRegisteru16(address, reg, value);
+	*value = (((*value) >> 8) | ((*value) << 8));
+
+	return result;
+}
+
+
+bool i2c::ReadRegisteru16(uint8_t address, uint8_t reg, uint16_t *value){
+	bool result;
+	uint8_t msb, lsb;
 	
 	Write(address, reg);
 	SendReadSlave(address);
-	value = (ReadByte(false)<<8);
-	value |= ReadByte(true);
-	SendStopBit();
+	result = (ReadByte(false, &msb) << 8);
+	if (result == false)
+		return false;
 
-	return value;
+	result = ReadByte(true, &lsb);
+	if (result == false)
+		return false;
+
+	if (SendStopBit() == false)
+		return false;
+
+	*value = msb;
+	*value = ((*value) << 8);
+	*value |= lsb;
+
+	return true;
 }
 
-void i2c::ReadRegisterFlow(uint8_t address, uint8_t reg, uint8_t cnt, uint8_t *buffer) {
-	// uint8_t test[7] = {1,2,3,4,5,6,7};
-
-
+bool i2c::ReadRegisterFlow(uint8_t address, uint8_t reg, uint8_t cnt, uint8_t *buffer) {
 	uint8_t readAddress;
 
 	if (SendStartBit() == false)
-		return;
-
+		return false;
 
 	// SLAVE ADRESSS PLUS WRITE
 	readAddress = ((address << 1) & 0xFE);
 	if (SendByte(readAddress) == false) //inc ack
-		return;
+		return false;
 
 	//Word addre / reg
-	SendByte(reg); //inc ack
+	if (SendByte(reg) == false) //inc ack
+		return false;
 
-	SendStartBit(); //Sr
+	if (SendStartBit() == false) //Sr
+		return false;
 
 	//Slave addr plus read
 	readAddress = ((address << 1) | 0x01);
-	SendByte(readAddress); //inc ack
+	if (SendByte(readAddress) == false) //inc ack
+		return false;
 
 	// debug->print("buffer = ");
 	uint8_t max = 6;
-	for(uint8_t i = 0; i <= max; i++){
-
-		if (i < max)
-			buffer[i] = ReadByte(false);
-		else
-			buffer[i] = ReadByte(true); //After last byte send nack
+	for (uint8_t i = 0; i <= max; i++) {
+		if (i < max) {
+			if (ReadByte(false, &buffer[i]) == false)
+				return false;
+			// buffer[i] = ReadByte(false);
+		} else {
+			if (ReadByte(true, &buffer[i]) == false) //After last byte send nack
+				return false;
+			// buffer[i] = ReadByte(true); //After last byte send nack
+		}
 
 	//	debug->Transmit(buffer[i]);
 	}
 
-	
-	// uint8_t i = 0;
-	// buffer[i++] = ReadByte(false);
-	// buffer[i++] = ReadByte(false);
-	// buffer[i++] = ReadByte(false);
-	// buffer[i++] = ReadByte(false);
-	// buffer[i++] = ReadByte(false);
-	// buffer[i++] = ReadByte(false); 
-	// buffer[i++] = ReadByte(true); //After last byte send nack
+	if (SendStopBit() == false)
+		return false;
 
-//	TWCR = (1<<TWINT) | (1<<TWEN); /* send NAK this time */
-
-	SendStopBit();
-
-	// memcpy(buffer, test, 7);
-//	return buffer;
+	return true;
 }
 
 void i2c::Init(void){
@@ -133,8 +143,10 @@ void i2c::Init(void){
 	TWCR = (1<<TWEN);
 }
 
-void i2c::SendReadSlave(uint8_t address){
-	SendStartBit();
+bool i2c::SendReadSlave(uint8_t address){
+
+	if (SendStartBit() == false)
+		return false;
 
 	// SLAVE ADRESSS plus READ command
 	TWDR = (address<<1) | 0x01; //0x76 met SDO = GND, 0x77 met SDO = VCC
@@ -143,15 +155,26 @@ void i2c::SendReadSlave(uint8_t address){
 	// WAIT FOR ADDRESS TO BE SENT
 	resetTimeout();
 	while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
+
+	if (didI2cTimeout())
+		return false;
+
+	return true;
 }
 
-void i2c::SendStopBit(void){
+bool i2c::SendStopBit(void){
 	//Start sending stop bit
 	TWCR = (1<<TWINT)| (1<<TWEN)|(1<<TWSTO);
 
 	//Wait for stop bit to be sent //IF BARO is broken this can be teh problem
 	resetTimeout();
 	while((!didI2cTimeout()) && (TWCR & (1<<TWSTO)) ==  0x00);
+
+	if (didI2cTimeout())
+		return false;
+
+	return true;
+
 }
 
 bool i2c::SendStartBit(void){
@@ -164,20 +187,20 @@ bool i2c::SendStartBit(void){
 		// debug->print("Start has been sent (I2C)\n");
 	}
 
-	//CHECK IF START FAILED
-	if ( (TWSR == 0x08) ){
-		// debug->print("Start sent :) (I2C)\n");
-		// debug->Transmit(TWSR);
-	} else if ( (TWSR == 0x10) ){
-		// debug->print("Repeated Start sent :) (I2C)\n");
-		// debug->Transmit(TWSR);
-	} else if ( (TWSR == 0xF8) ){
-		// debug->print("No bus info (I2C)\n");
-		// debug->Transmit(TWSR);
-	} else {
-		// debug->print("Something has failed (I2C)\n");
-		// debug->Transmit(TWSR);
-	}
+	// //CHECK IF START FAILED
+	// if ( (TWSR == 0x08) ){
+	// 	debug->print("Start sent :) (I2C)\n");
+	// 	debug->Transmit(TWSR);
+	// } else if ( (TWSR == 0x10) ){
+	// 	debug->print("Repeated Start sent :) (I2C)\n");
+	// 	debug->Transmit(TWSR);
+	// } else if ( (TWSR == 0xF8) ){
+	// 	debug->print("No bus info (I2C)\n");
+	// 	debug->Transmit(TWSR);
+	// } else {
+	// 	debug->print("Something has failed (I2C)\n");
+	// 	debug->Transmit(TWSR);
+	// }
 
 	if (didI2cTimeout())
 		return false;
@@ -186,55 +209,65 @@ bool i2c::SendStartBit(void){
 
 }
 
-uint8_t i2c::ReadByte(bool nack){
+bool i2c::ReadByte(bool nack, uint8_t *result){
+
 	if(nack == true){
 		TWCR = (1<<TWINT) | (1<<TWEN); /* send NAK this time */
 	} else {
 		TWCR = (1<<TWINT)|(1<<TWEA)|(1<<TWEN);		/* clear int to start recieving data (start command?)*/
 	}
 
-	i2c_timeout_ticks = 0;
+	resetTimeout();
 	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for data */
 
 	if (didI2cTimeout())
-		return 0;
+		return false;
 
 	//return recieved data
-	return TWDR;	
+	*result = TWDR;
+	return true;	
 }
 
 bool i2c::SendByte(uint8_t data){
-		// DATA TO BE SENT
-		TWDR = data;
-		TWCR = (1<<TWINT) | (1<<TWEN);
+	// DATA TO BE SENT
+	TWDR = data;
+	TWCR = (1<<TWINT) | (1<<TWEN);
 
-		// WAIT FOR DATA TO BE SENT AND RECEIVE AN ACKNOWLEDGE
-		cli();
-		i2c_timeout_ticks = 0;
-		sei();
-		while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
+	// WAIT FOR DATA TO BE SENT AND RECEIVE AN ACKNOWLEDGE
+	resetTimeout();
+	while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
 
-		if (didI2cTimeout())
-			return false;
+	if (didI2cTimeout())
+		return false;
 
-		return true;
+	return true;
 }
 
-void i2c::Write(uint8_t address, uint8_t reg){
-	WriteData(address, reg, 0x00, false);
+bool i2c::Write(uint8_t address, uint8_t reg) {
+	return WriteData(address, reg, 0x00, false);
 }	
 
-void i2c::WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData){
-	SendStartBit();
-	WriteDataRaw(address, reg, data, withData);
-	SendStopBit();	
+bool i2c::WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData) {
+
+	if (SendStartBit() == false)
+		return false;
+
+	if (WriteDataRaw(address, reg, data, withData) == false)
+		return false;
+
+	if (SendStopBit() == false)
+		return false;
+
+	return true;	
 }
 
 
-void i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData){
+bool i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData) {
 	// SLAVE ADRESSS PLUS WRITE
 	uint8_t readAddress = ((address << 1) & 0xFE);
-	SendByte(readAddress);
+	
+	if (SendByte(readAddress) == false)
+		return false;
 
 	//CHECK IF SENDING ADDRESS FAILED
 	resetTimeout();
@@ -242,9 +275,12 @@ void i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData
 		// PRINT_STR(debug, "No ack received (I2C) implement timeout\n");
 	}
 		
-	SendByte(reg);
+	if (SendByte(reg) == false)
+		return false;
 
-	if(withData) {
-		SendByte(data);
-	}
+	if(withData)
+		if (SendByte(data) == false)
+			return false;
+
+	return true;
 }

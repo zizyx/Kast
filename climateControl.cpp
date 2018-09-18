@@ -406,15 +406,22 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			(uint8_t)stringToUint16(cmd + (CLOCK_MONTH_OFFSET), CLOCK_MONTH_OFFSET_LEN),
 			stringToUint16(cmd + (CLOCK_YEAR_OFFSET), CLOCK_YEAR_OFFSET_LEN));
 		m_clock.setTime(datetime);
-		sprintf(string, "Updated datetime to %s\n", m_clock.getCurrentTime().toString());
+
+		if (m_clock.getCurrentTime(&datetime) == false)
+			sprintf(string, "ERROR update datetime.\n");
+		else
+			sprintf(string, "Updated datetime to %s\n", datetime.toString());
 	} 
 
 	// CMD get_clock;
 	////////////////////////////////////////////////////////////////////////////////////
 	else if (m_serial.isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
-		datetime_t tempTime = m_clock.getCurrentTime();
+		datetime_t tempTime;
 
-		sprintf(string, "Current datetime is %s\n", tempTime.toString());
+		if (m_clock.getCurrentTime(&tempTime) == false)
+			sprintf(string, "Current datetime is %s\n", tempTime.toString());
+		else
+			sprintf(string, "Current datetime is %s\n", tempTime.toString());
 	} 
 
 	// CMD get_temp;
@@ -509,11 +516,21 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_READ_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
 
 			char *nvmBuffer = (char*)calloc(50, sizeof(char));
+			if (nvmBuffer == NULL) {
+				sprintf(string, "nvmBuffer is NULL\n");
+				m_serial.print(string);				
+			}
+
 			if(dataLength <= 50){
 				m_nvm.nvmReadBlock(startAddress, (uint8_t *)nvmBuffer, dataLength);
+
+				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+				m_serial.print(string);
+				m_serial.print((char *)nvmBuffer, dataLength);
+				sprintf(string, "\n");
+
 				encapsulate(&nvmBuffer, &dataLength);
 
-				m_serial.print("Array contains "); printArr(nvmBuffer, dataLength);
 				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
 				m_serial.print(string);
 				m_serial.print((char *)nvmBuffer, dataLength);

@@ -71,8 +71,8 @@ class BMP_280{
 		} bmp280_data;
 	private:
 		i2c m_i2c;
-		void ReadPressureRegisters();
-		void ReadTempRegisters();
+		bool ReadPressureRegisters();
+		bool ReadTempRegisters();
 
 		uint32_t Calc(void);
 		void PressureCalc();
