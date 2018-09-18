@@ -419,7 +419,7 @@ void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
 		datetime_t tempTime;
 
 		if (m_clock.getCurrentTime(&tempTime) == false)
-			sprintf(string, "Current datetime is %s\n", tempTime.toString());
+			sprintf(string, "Err could not get datetime\n");
 		else
 			sprintf(string, "Current datetime is %s\n", tempTime.toString());
 	} 

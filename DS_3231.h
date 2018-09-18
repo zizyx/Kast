@@ -102,7 +102,7 @@ class DS_3231 {
 	public:
 		DS_3231(void);
 		uint16_t ReadTemperature();
-		void getTimeVarsAsString(char *string);
+		void getTimeVarsAsString(char **string);
 		bool getCurrentTime(datetime_t *time);
 		void testing(char* string);
 		bool setTime(datetime_t datetime);

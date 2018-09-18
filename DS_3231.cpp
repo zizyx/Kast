@@ -69,15 +69,15 @@ bool DS_3231::getCurrentTime(datetime_t *time) {
 	return true;
 }
 
-void DS_3231::getTimeVarsAsString(char *string) {	
+void DS_3231::getTimeVarsAsString(char **string) {	
 	datetime_t time;
 
 	if (getCurrentTime(&time) == false) {
-		sprintf(string, "ERROR: Could not get clock.\n");
-		return;
+		sprintf(*string, "ERROR: Could not get clock.\n");
+	} else {
+		sprintf(*string, "%s\n", time.toString());	
 	}
 
-	sprintf(string, "%s\n", time.toString());
 }
 
 bool DS_3231::setTime(datetime_t datetime) {
