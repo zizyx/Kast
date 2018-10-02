@@ -4,6 +4,7 @@
 
 #include "i2c.h"
 #include <avr/interrupt.h>
+#include "helper.h" 
 
 volatile uint8_t i2c_timeout_ticks = 0;
 
@@ -12,7 +13,6 @@ i2c::i2c(uart &serialInterface) :
 {
 	Init();
 }
-
 
 void i2c::resetTimeout() {
 	cli();
@@ -28,24 +28,22 @@ bool i2c::didI2cTimeout() {
 	return false;
 }
 
+void i2c::do_i2c(uint8_t reg, uint8_t bit) {	
+	resetTimeout();
+	while((!didI2cTimeout()) && !(reg & (1<<bit)));
+}
+
+
 void i2c::SendNack(void){
 	TWCR = (1<<TWINT) | (1<<TWEN); /* send NAK this time (stop command?) */
-	resetTimeout();
-	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for nack */
+	do_i2c(TWCR, TWINT); /* wait for nack */
 }
 
 bool i2c::ReadRegisteru8(uint8_t address, uint8_t reg, uint8_t *value) {
-	bool result;
-
 	Write(address, reg);
 	SendReadSlave(address);
-	result = ReadByte(true, value);
-	if (result == false)
-		return false;
-
-	result = SendStopBit();
-	if (result == false)
-		return false;
+	return_if_false(ReadByte(true, value));
+	return_if_false(SendStopBit());
 
 	return true;
 }
@@ -66,70 +64,48 @@ bool i2c::ReadRegisteru16LE(uint8_t address, uint8_t reg, uint16_t *value) {
 
 
 bool i2c::ReadRegisteru16(uint8_t address, uint8_t reg, uint16_t *value){
-	bool result;
 	uint8_t msb, lsb;
 	
 	Write(address, reg);
 	SendReadSlave(address);
-	result = (ReadByte(false, &msb) << 8);
-	if (result == false)
-		return false;
+	return_if_false((ReadByte(false, &msb) << 8));
+	return_if_false(ReadByte(true, &lsb));
+	return_if_false(SendStopBit());
 
-	result = ReadByte(true, &lsb);
-	if (result == false)
-		return false;
-
-	if (SendStopBit() == false)
-		return false;
-
-	*value = msb;
-	*value = ((*value) << 8);
-	*value |= lsb;
+	*value = to_uint16_t(msb, lsb);
 
 	return true;
 }
 
 bool i2c::ReadRegisterFlow(uint8_t address, uint8_t reg, uint8_t cnt, uint8_t *buffer) {
+	uint8_t max = 6;
 	uint8_t readAddress;
 
-	if (SendStartBit() == false)
-		return false;
+	return_if_false(SendStartBit());
 
 	// SLAVE ADRESSS PLUS WRITE
 	readAddress = ((address << 1) & 0xFE);
-	if (SendByte(readAddress) == false) //inc ack
-		return false;
+	return_if_false(SendByte(readAddress)); //inc ack
 
 	//Word addre / reg
-	if (SendByte(reg) == false) //inc ack
-		return false;
+	return_if_false(SendByte(reg)); //inc ack
 
-	if (SendStartBit() == false) //Sr
-		return false;
+	return_if_false(SendStartBit()); //Sr
 
 	//Slave addr plus read
 	readAddress = ((address << 1) | 0x01);
-	if (SendByte(readAddress) == false) //inc ack
-		return false;
+	return_if_false(SendByte(readAddress)); //inc ack
 
 	// debug->print("buffer = ");
-	uint8_t max = 6;
 	for (uint8_t i = 0; i <= max; i++) {
 		if (i < max) {
-			if (ReadByte(false, &buffer[i]) == false)
-				return false;
-			// buffer[i] = ReadByte(false);
+			return_if_false(ReadByte(false, &buffer[i]));
 		} else {
-			if (ReadByte(true, &buffer[i]) == false) //After last byte send nack
-				return false;
-			// buffer[i] = ReadByte(true); //After last byte send nack
+			return_if_false(ReadByte(true, &buffer[i])); //After last byte send nack
 		}
-
 	//	debug->Transmit(buffer[i]);
 	}
-
-	if (SendStopBit() == false)
-		return false;
+	return_if_false(SendStopBit());
 
 	return true;
 }
@@ -144,21 +120,17 @@ void i2c::Init(void){
 }
 
 bool i2c::SendReadSlave(uint8_t address){
-
-	if (SendStartBit() == false)
-		return false;
+	return_if_false(SendStartBit());
 
 	// SLAVE ADRESSS plus READ command
 	TWDR = (address<<1) | 0x01; //0x76 met SDO = GND, 0x77 met SDO = VCC
 	TWCR = (1<<TWINT) | (1<<TWEN);
 
 	// WAIT FOR ADDRESS TO BE SENT
-	resetTimeout();
-	while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
+	do_i2c(TWCR, TWINT);
 
-	if (didI2cTimeout())
-		return false;
-
+	return_if_true(didI2cTimeout());
+	
 	return true;
 }
 
@@ -167,14 +139,11 @@ bool i2c::SendStopBit(void){
 	TWCR = (1<<TWINT)| (1<<TWEN)|(1<<TWSTO);
 
 	//Wait for stop bit to be sent //IF BARO is broken this can be teh problem
-	resetTimeout();
-	while((!didI2cTimeout()) && (TWCR & (1<<TWSTO)) ==  0x00);
+	do_i2c(TWCR, TWSTO);
 
-	if (didI2cTimeout())
-		return false;
-
+	return_if_true(didI2cTimeout());
+	
 	return true;
-
 }
 
 bool i2c::SendStartBit(void){
@@ -202,11 +171,9 @@ bool i2c::SendStartBit(void){
 	// 	debug->Transmit(TWSR);
 	// }
 
-	if (didI2cTimeout())
-		return false;
-
+	return_if_true(didI2cTimeout());
+	
 	return true;
-
 }
 
 bool i2c::ReadByte(bool nack, uint8_t *result){
@@ -220,9 +187,8 @@ bool i2c::ReadByte(bool nack, uint8_t *result){
 	resetTimeout();
 	while((!didI2cTimeout()) && (TWCR & (1<<TWINT)) == 0); /* wait for data */
 
-	if (didI2cTimeout())
-		return false;
-
+	return_if_true(didI2cTimeout());
+	
 	//return recieved data
 	*result = TWDR;
 	return true;	
@@ -237,8 +203,7 @@ bool i2c::SendByte(uint8_t data){
 	resetTimeout();
 	while((!didI2cTimeout()) && !(TWCR & (1<<TWINT)));
 
-	if (didI2cTimeout())
-		return false;
+	return_if_true(didI2cTimeout());
 
 	return true;
 }
@@ -249,14 +214,9 @@ bool i2c::Write(uint8_t address, uint8_t reg) {
 
 bool i2c::WriteData(uint8_t address, uint8_t reg, uint8_t data, bool withData) {
 
-	if (SendStartBit() == false)
-		return false;
-
-	if (WriteDataRaw(address, reg, data, withData) == false)
-		return false;
-
-	if (SendStopBit() == false)
-		return false;
+	return_if_false(SendStartBit());
+	return_if_false(WriteDataRaw(address, reg, data, withData));
+	return_if_false(SendStopBit());
 
 	return true;	
 }
@@ -266,8 +226,7 @@ bool i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData
 	// SLAVE ADRESSS PLUS WRITE
 	uint8_t readAddress = ((address << 1) & 0xFE);
 	
-	if (SendByte(readAddress) == false)
-		return false;
+	return_if_false(SendByte(readAddress));
 
 	//CHECK IF SENDING ADDRESS FAILED
 	resetTimeout();
@@ -275,12 +234,10 @@ bool i2c::WriteDataRaw(uint8_t address, uint8_t reg, uint8_t data, bool withData
 		// PRINT_STR(debug, "No ack received (I2C) implement timeout\n");
 	}
 		
-	if (SendByte(reg) == false)
-		return false;
+	return_if_false(SendByte(reg))
 
 	if(withData)
-		if (SendByte(data) == false)
-			return false;
+		return_if_false(SendByte(data))
 
 	return true;
 }

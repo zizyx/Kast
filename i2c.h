@@ -9,7 +9,7 @@
 #define MT_SLA_ACK							0x18
 #define DDR_SPI 							DDRB
 #define START 								0x08
-#define I2C_TIMEOUT_TIME 						2
+#define I2C_TIMEOUT_TIME 					2
 
 extern volatile uint8_t i2c_timeout_ticks;
 
@@ -29,6 +29,7 @@ class i2c{
 		uint8_t read_buffer[10];
 		void SendNack(void);
 		bool didI2cTimeout();
+		void do_i2c(uint8_t reg, uint8_t bit);
 		void resetTimeout();
 		void Init(void);
 		bool SendReadSlave(uint8_t address);
