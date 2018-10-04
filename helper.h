@@ -22,5 +22,4 @@ static inline uint16_t to_uint16_t(uint8_t msb, uint8_t lsb) {
 
 // #define return_if_true(val) return ((val) ? : false);
 
-
 #endif

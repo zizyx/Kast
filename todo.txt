@@ -4,6 +4,10 @@
 
 
 *                                 Embedded                                 *
+o Read nvm broken
+
+o Replace didi2ctimeout function with do_i2c
+
 o Create macro (eval) to check value and return false if not true.
 
 o Implement watchdog again.
