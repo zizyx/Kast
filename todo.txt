@@ -41,6 +41,3 @@ o Set plant COMMAND (uart) --> python which will parse a JSON file.
 
 3 Clock changed the date somewhere between 1 (most likely 9) januari and 1 
   februari to the year 2120. 
-
-
-#define eval(match, func, args...)		(func(args) == match) ? true : false
