@@ -13,6 +13,9 @@ uart::uart(){
 }
 
 void uart::Init(uint16_t baudrate){
+
+	m_rxCallback = NULL;
+
 	/*Set baud rate */
 	UBRR0H = (baudrate >> 8);
 	UBRR0L = baudrate;
@@ -47,51 +50,32 @@ void uart::Transmit(uint8_t data){
 	UDR0 = data;
 }
 
-void uart::checkBuffer(climateControl &c, callback cb)
+/* If the caller returns and need the data to be saved, it needs to copy the values */
+void uart::setCallback(f_rxCallback_t cb) {
+	m_rxCallback = cb;
+}
+
+void uart::checkBuffer()
 {
-	// uint8_t new_len;
+	if (m_rxCallback == NULL)
+		return;
 
-	for(uint8_t i = 0; i < bufferLength; i++){
-		if(rxBuffer[i] == FLUSH){ //flush buffer after sending data 
-			// new_len = decodeBuffer(rxBuffer, i);
-			(c.* cb)(rxBuffer, i);
-			bufferLength = 0;
-		}
-	}
-	// print(rxBuffer + '\0');
-}
+	cli();
+	m_rxCallback(rxBuffer, bufferLength);
+	sei();
 
-//cmd,  write_nvm_00100_08_01234567;
-// m_serial.isPartEqual("write_nvm_00100_08_01234567", "write_nvm_01024_50_", 27 - 9, 19)
-bool uart::isPartEqual(char *a, char *b, uint8_t validateLength) {
-	for(uint8_t i = 0; i < validateLength; i++){
-		if(a[i] != b[i]){
-			// TransmitString("a[i] != b[i]\n");
-			return false;
-		}
-	}
-	// TransmitString("Equal :D\n");
-	return true; //Equal :D
-}
-
-bool uart::isEqual(char *a, char *b, uint8_t validateLength, uint8_t cmdLength, uint8_t length){
-	if(length != cmdLength){
-		// TransmitString("length != cmdLength'\n");
-		// TransmitString("length = "); Transmit(length); TransmitString("\n");
-		// TransmitString("cmdLength = "); Transmit(cmdLength); TransmitString("\n");
-		return false;
-	}
-
-	return isPartEqual(a, b, validateLength);
-}
-
-bool uart::isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength){
-	return isEqual(a, b, length, cmdLength, length);	
+	//Clear buffer
+	bufferLength = 0;
 }
 
 ISR(USART_RX_vect){
 	if(UCSR0A & (1<<RXC0)) {
 		// bufferLength = (bufferLength + 1 ) % RX_BUFFER_SIZE;
 		rxBuffer[bufferLength++] = UDR0;
+
+		// This makes it a circulair buffer which still accepts
+		// new bytes to be added, even if it is filled with
+		// garbage.
+		bufferLength = (bufferLength % RX_BUFFER_SIZE);
 	}
 }

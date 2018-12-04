@@ -361,223 +361,225 @@ void climateControl::setWaterPumpHardware() {
 	//Setup timeout timer.
 }
 
-void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
-	// reading incoming string
-	for(uint8_t i = 0; i < cmdLength; i++){
-		m_serial.Transmit(cmd[i]); //Echo what is sent to the device	
-	}
+
+
+// void climateControl::handleCmd(char *cmd, uint8_t cmdLength) {
+// 	// reading incoming string
+// 	for(uint8_t i = 0; i < cmdLength; i++){
+// 		m_serial.Transmit(cmd[i]); //Echo what is sent to the device	
+// 	}
 	
-	// CMD fan_on;
-	////////////////////////////////////////////////////////////////////////////////////
-	if (m_serial.isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
-		sprintf(string, "Turning fan on.\n");
-		setFanState(FAN_ON);
-	} 
+// 	// CMD fan_on;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	if (m_serial.isEqual(cmd, (char *)CMD_FAN_ON, CMD_FAN_ON_LEN, cmdLength)){
+// 		sprintf(string, "Turning fan on.\n");
+// 		setFanState(FAN_ON);
+// 	} 
 	
-	// CMD fan_off;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
-		sprintf(string, "Turning off fan.\n");
-		setFanState(FAN_OFF);
-	} 
+// 	// CMD fan_off;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_OFF, CMD_FAN_OFF_LEN, cmdLength)){
+// 		sprintf(string, "Turning off fan.\n");
+// 		setFanState(FAN_OFF);
+// 	} 
 
 	
-	// CMD Fan_lvl_xxx;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_LVL, cmdLength - CMD_FAN_LVL_ARG_LEN, 
-			CMD_FAN_LVL_LEN, cmdLength)) {
+// 	// CMD Fan_lvl_xxx;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_FAN_LVL, cmdLength - CMD_FAN_LVL_ARG_LEN, 
+// 			CMD_FAN_LVL_LEN, cmdLength)) {
 
-		uint8_t fan_pwm_level = 0;
-		fan_pwm_level = stringToUint16(cmd + (CMD_FAN_LVL_LEN - CMD_FAN_LVL_ARG_LEN), CMD_FAN_LVL_ARG_LEN);
+// 		uint8_t fan_pwm_level = 0;
+// 		fan_pwm_level = stringToUint16(cmd + (CMD_FAN_LVL_LEN - CMD_FAN_LVL_ARG_LEN), CMD_FAN_LVL_ARG_LEN);
 
-		sprintf(string, "Updating fan lvl to %d\n", fan_pwm_level);
-		setFanState(FAN_ON, fan_pwm_level);
-	} 
+// 		sprintf(string, "Updating fan lvl to %d\n", fan_pwm_level);
+// 		setFanState(FAN_ON, fan_pwm_level);
+// 	} 
 	
-	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
-		datetime_t datetime = datetime_t(
-			(uint8_t)stringToUint16(cmd + (CLOCK_SECOND_OFFSET), CLOCK_SECOND_OFFSET_LEN),
-			(uint8_t)stringToUint16(cmd + (CLOCK_MINUTE_OFFSET), CLOCK_MINUTE_OFFSET_LEN),
-			(uint8_t)stringToUint16(cmd + (CLOCK_HOUR_OFFSET), CLOCK_HOUR_OFFSET_LEN),
-			(uint8_t)stringToUint16(cmd + (CLOCK_DAY_OFFSET), CLOCK_DAY_OFFSET_LEN),
-			(uint8_t)stringToUint16(cmd + (CLOCK_DATE_OFFSET), CLOCK_DATE_OFFSET_LEN),
-			(uint8_t)stringToUint16(cmd + (CLOCK_MONTH_OFFSET), CLOCK_MONTH_OFFSET_LEN),
-			stringToUint16(cmd + (CLOCK_YEAR_OFFSET), CLOCK_YEAR_OFFSET_LEN));
-		m_clock.setTime(datetime);
+// 	// CMD set_clock_33_03_03_3_30_03_2033; // set_clock_21_01_08_2_14_03_2017;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_SET_CLOCK, cmdLength - CMD_SET_CLOCK_ARG_LEN, CMD_SET_CLOCK_LEN, cmdLength)){
+// 		datetime_t datetime = datetime_t(
+// 			(uint8_t)stringToUint16(cmd + (CLOCK_SECOND_OFFSET), CLOCK_SECOND_OFFSET_LEN),
+// 			(uint8_t)stringToUint16(cmd + (CLOCK_MINUTE_OFFSET), CLOCK_MINUTE_OFFSET_LEN),
+// 			(uint8_t)stringToUint16(cmd + (CLOCK_HOUR_OFFSET), CLOCK_HOUR_OFFSET_LEN),
+// 			(uint8_t)stringToUint16(cmd + (CLOCK_DAY_OFFSET), CLOCK_DAY_OFFSET_LEN),
+// 			(uint8_t)stringToUint16(cmd + (CLOCK_DATE_OFFSET), CLOCK_DATE_OFFSET_LEN),
+// 			(uint8_t)stringToUint16(cmd + (CLOCK_MONTH_OFFSET), CLOCK_MONTH_OFFSET_LEN),
+// 			stringToUint16(cmd + (CLOCK_YEAR_OFFSET), CLOCK_YEAR_OFFSET_LEN));
+// 		m_clock.setTime(datetime);
 
-		if (m_clock.getCurrentTime(&datetime) == false)
-			sprintf(string, "ERROR update datetime.\n");
-		else
-			sprintf(string, "Updated datetime to %s\n", datetime.toString());
-	} 
+// 		if (m_clock.getCurrentTime(&datetime) == false)
+// 			sprintf(string, "ERROR update datetime.\n");
+// 		else
+// 			sprintf(string, "Updated datetime to %s\n", datetime.toString());
+// 	} 
 
-	// CMD get_clock;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
-		datetime_t tempTime;
+// 	// CMD get_clock;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_GET_CLOCK, CMD_GET_CLOCK_LEN, cmdLength)){
+// 		datetime_t tempTime;
 
-		if (m_clock.getCurrentTime(&tempTime) == false)
-			sprintf(string, "Err could not get datetime\n");
-		else
-			sprintf(string, "Current datetime is %s\n", tempTime.toString());
-	} 
+// 		if (m_clock.getCurrentTime(&tempTime) == false)
+// 			sprintf(string, "Err could not get datetime\n");
+// 		else
+// 			sprintf(string, "Current datetime is %s\n", tempTime.toString());
+// 	} 
 
-	// CMD get_temp;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
-		CMD_GET_TEMP_LEN, cmdLength)) {
-		if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
-			sprintf(string, "temp is %d\n", m_baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
-			// sprintf(string, "temp is %d\n", 10); //Deze is weer genaaid
-		} else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
-			sprintf(string, "temp is %d\n", m_baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
-			// sprintf(string, "temp is %d\n", 20); //Deze is weer genaaid
-		} else {
-			return;
-		}
-	}
+// 	// CMD get_temp;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_GET_TEMP, cmdLength - CMD_GET_TEMP_ARG_LEN, 
+// 		CMD_GET_TEMP_LEN, cmdLength)) {
+// 		if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '0'){
+// 			sprintf(string, "temp is %d\n", m_baro_inside.ReadTemperatureRound()); //Deze is weer genaaid
+// 			// sprintf(string, "temp is %d\n", 10); //Deze is weer genaaid
+// 		} else if (cmd[cmdLength - CMD_GET_TEMP_ARG_LEN] == '1'){
+// 			sprintf(string, "temp is %d\n", m_baro_outside.ReadTemperatureRound()); //Deze is weer genaaid
+// 			// sprintf(string, "temp is %d\n", 20); //Deze is weer genaaid
+// 		} else {
+// 			return;
+// 		}
+// 	}
 
-	// CMD get_press;
-	////////////////////////////////////////////////////////////////////////////////////		
-	else if (m_serial.isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
-		CMD_GET_PRESS_LEN, cmdLength)) {
-		if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
-			sprintf(string, "pressure is %ld Pascal\n", m_baro_inside.ReadPressure()); //Deze is weer genaaid
-			// sprintf(string, "pressure is %ld Pascal\n", 11L); //Deze is weer genaaid
-		} else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
-			sprintf(string, "pressure is %ld Pascal\n", m_baro_outside.ReadPressure()); //Deze is weer genaaid
-			// sprintf(string, "pressure is %ld Pascal\n", 22L); //Deze is weer genaaid
-		} else {
-			return;
-		}
-	}
+// 	// CMD get_press;
+// 	////////////////////////////////////////////////////////////////////////////////////		
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_GET_PRESS, cmdLength - CMD_GET_PRESS_ARG_LEN, 
+// 		CMD_GET_PRESS_LEN, cmdLength)) {
+// 		if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '0'){
+// 			sprintf(string, "pressure is %ld Pascal\n", m_baro_inside.ReadPressure()); //Deze is weer genaaid
+// 			// sprintf(string, "pressure is %ld Pascal\n", 11L); //Deze is weer genaaid
+// 		} else if (cmd[cmdLength - CMD_GET_PRESS_ARG_LEN] == '1'){
+// 			sprintf(string, "pressure is %ld Pascal\n", m_baro_outside.ReadPressure()); //Deze is weer genaaid
+// 			// sprintf(string, "pressure is %ld Pascal\n", 22L); //Deze is weer genaaid
+// 		} else {
+// 			return;
+// 		}
+// 	}
 
-	// CMD get_humid;
-	////////////////////////////////////////////////////////////////////////////////////		
-	else if (m_serial.isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
-		sprintf(string, "Humidity is %d.\n", getHumidity());
-		// Around 500+ is dry
-		// Fully wet is around 300-
-		// Test in ground to be sure
-	}
+// 	// CMD get_humid;
+// 	////////////////////////////////////////////////////////////////////////////////////		
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_GET_HUMID, CMD_GET_HUMID_LEN, cmdLength)){
+// 		sprintf(string, "Humidity is %d.\n", getHumidity());
+// 		// Around 500+ is dry
+// 		// Fully wet is around 300-
+// 		// Test in ground to be sure
+// 	}
 
-	// CMD set_warm_lamp_;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
-		CMD_SET_WARM_LAMP_LEN, cmdLength)) {
-		if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '0'){
-			sprintf(string, "Turning warm lamp off\n");
-			setLampState(WARM_LAMP, LAMP_OFF);
-		} else if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '1'){
-			sprintf(string, "Turning warm lamp on\n");
-			setLampState(WARM_LAMP, LAMP_ON);
-		} else {
-			return;
-		}
-	}
-	// CMD set_cold_lamp_;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
-		CMD_SET_COLD_LAMP_LEN, cmdLength)) {
-		if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '0'){
-			sprintf(string, "Turning cold lamp off\n");
-			setLampState(COLD_LAMP, LAMP_OFF);
-		} else if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '1'){
-			sprintf(string, "Turning cold lamp on\n");
-			setLampState(COLD_LAMP, LAMP_ON);
-		} else {
-			return;
-		}
-	}
-	// CMD set_water_pump_;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
-		CMD_SET_WATER_PUMP_LEN, cmdLength)) {
-		if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '0'){
-			sprintf(string, "Turning water pump off\n");
-			setWaterPumpState(WATER_PUMP_OFF);
-		} else if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '1'){
-			sprintf(string, "Turning water pump on\n");
-			setWaterPumpState(WATER_PUMP_ON);
-		} else {
-			return;
-		}
-	}
-	// CMD read_nvm_00100_08;
-	////////////////////////////////////////////////////////////////////////////////////
-	else if (m_serial.isPartEqual(cmd, (char *)CMD_READ_NVM, CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN)) {
+// 	// CMD set_warm_lamp_;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_SET_WARM_LAMP, cmdLength - CMD_SET_WARM_LAMP_ARG_LEN, 
+// 		CMD_SET_WARM_LAMP_LEN, cmdLength)) {
+// 		if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '0'){
+// 			sprintf(string, "Turning warm lamp off\n");
+// 			setLampState(WARM_LAMP, LAMP_OFF);
+// 		} else if (cmd[cmdLength - CMD_SET_WARM_LAMP_ARG_LEN] == '1'){
+// 			sprintf(string, "Turning warm lamp on\n");
+// 			setLampState(WARM_LAMP, LAMP_ON);
+// 		} else {
+// 			return;
+// 		}
+// 	}
+// 	// CMD set_cold_lamp_;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_SET_COLD_LAMP, cmdLength - CMD_SET_COLD_LAMP_ARG_LEN, 
+// 		CMD_SET_COLD_LAMP_LEN, cmdLength)) {
+// 		if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '0'){
+// 			sprintf(string, "Turning cold lamp off\n");
+// 			setLampState(COLD_LAMP, LAMP_OFF);
+// 		} else if (cmd[cmdLength - CMD_SET_COLD_LAMP_ARG_LEN] == '1'){
+// 			sprintf(string, "Turning cold lamp on\n");
+// 			setLampState(COLD_LAMP, LAMP_ON);
+// 		} else {
+// 			return;
+// 		}
+// 	}
+// 	// CMD set_water_pump_;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isEqual(cmd, (char *)CMD_SET_WATER_PUMP, cmdLength - CMD_SET_WATER_PUMP_ARG_LEN, 
+// 		CMD_SET_WATER_PUMP_LEN, cmdLength)) {
+// 		if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '0'){
+// 			sprintf(string, "Turning water pump off\n");
+// 			setWaterPumpState(WATER_PUMP_OFF);
+// 		} else if (cmd[cmdLength - CMD_SET_WATER_PUMP_ARG_LEN] == '1'){
+// 			sprintf(string, "Turning water pump on\n");
+// 			setWaterPumpState(WATER_PUMP_ON);
+// 		} else {
+// 			return;
+// 		}
+// 	}
+// 	// CMD read_nvm_00100_08;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	else if (m_serial.isPartEqual(cmd, (char *)CMD_READ_NVM, CMD_READ_NVM_LEN - CMD_READ_NVM_ARG_LEN)) {
 
-		if (cmdLength == CMD_READ_NVM_LEN) {
-			sprintf(string, "Reading NVM Address\n");
+// 		if (cmdLength == CMD_READ_NVM_LEN) {
+// 			sprintf(string, "Reading NVM Address\n");
 
-			uint16_t startAddress = stringToUint16(cmd + NVM_READ_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
-			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_READ_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
+// 			uint16_t startAddress = stringToUint16(cmd + NVM_READ_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
+// 			uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_READ_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
 
-			char *nvmBuffer = (char*)calloc(50, sizeof(char));
-			if (nvmBuffer == NULL) {
-				sprintf(string, "nvmBuffer is NULL\n");
-				m_serial.print(string);				
-			}
+// 			char *nvmBuffer = (char*)calloc(50, sizeof(char));
+// 			if (nvmBuffer == NULL) {
+// 				sprintf(string, "nvmBuffer is NULL\n");
+// 				m_serial.print(string);				
+// 			}
 
-			if(dataLength <= 50){
-				m_nvm.nvmReadBlock(startAddress, (uint8_t *)nvmBuffer, dataLength);
+// 			if(dataLength <= 50){
+// 				m_nvm.nvmReadBlock(startAddress, (uint8_t *)nvmBuffer, dataLength);
 
-				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
-				m_serial.print(string);
-				m_serial.print((char *)nvmBuffer, dataLength);
-				sprintf(string, "\n");
+// 				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+// 				m_serial.print(string);
+// 				m_serial.print((char *)nvmBuffer, dataLength);
+// 				sprintf(string, "\n");
 
-				encapsulate(&nvmBuffer, &dataLength);
+// 				encapsulate(&nvmBuffer, &dataLength);
 
-				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
-				m_serial.print(string);
-				m_serial.print((char *)nvmBuffer, dataLength);
-				sprintf(string, "\n");
-			} else {
-				sprintf(string, "Reading more than 50 bytes at once is not supported\n");
-			}
-			free(nvmBuffer);
-		} else {
-			sprintf(string, "cmdLength %d != than expected length %d\n",
-				cmdLength, CMD_READ_NVM_LEN);
-		}
+// 				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+// 				m_serial.print(string);
+// 				m_serial.print((char *)nvmBuffer, dataLength);
+// 				sprintf(string, "\n");
+// 			} else {
+// 				sprintf(string, "Reading more than 50 bytes at once is not supported\n");
+// 			}
+// 			free(nvmBuffer);
+// 		} else {
+// 			sprintf(string, "cmdLength %d != than expected length %d\n",
+// 				cmdLength, CMD_READ_NVM_LEN);
+// 		}
 
-	// CMD write_nvm_00100_08_0123;567;
-	// CMD write_nvm_00100_08_0123|+567;
-	////////////////////////////////////////////////////////////////////////////////////
-	} else if (m_serial.isPartEqual(cmd, (char *)CMD_WRITE_NVM, CMD_WRITE_NVM_LEN - CMD_WRITE_NVM_ARG_LEN)) {
+// 	// CMD write_nvm_00100_08_0123;567;
+// 	// CMD write_nvm_00100_08_0123|+567;
+// 	////////////////////////////////////////////////////////////////////////////////////
+// 	} else if (m_serial.isPartEqual(cmd, (char *)CMD_WRITE_NVM, CMD_WRITE_NVM_LEN - CMD_WRITE_NVM_ARG_LEN)) {
 
-		uint16_t startAddress = stringToUint16(cmd + NVM_WRITE_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
-		uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_WRITE_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
-		char *buffer = &cmd[CMD_WRITE_NVM_LEN];
+// 		uint16_t startAddress = stringToUint16(cmd + NVM_WRITE_START_ADDRESS_OFFSET, NVM_ADDRESS_LEN);
+// 		uint8_t dataLength = (uint8_t)stringToUint16(cmd + NVM_WRITE_DATA_LENGTH_OFFSET, NVM_DATA_LEN);
+// 		char *buffer = &cmd[CMD_WRITE_NVM_LEN];
 
-		// cmdLength -1 because there is a ';' at the end of the data
-		if (dataLength <= (cmdLength - CMD_WRITE_NVM_LEN)) {
-			m_serial.print("Writing NVM Address\n");
+// 		// cmdLength -1 because there is a ';' at the end of the data
+// 		if (dataLength <= (cmdLength - CMD_WRITE_NVM_LEN)) {
+// 			m_serial.print("Writing NVM Address\n");
 
-			//decapsulate data
-			dataLength = (cmdLength - CMD_WRITE_NVM_LEN);
-			if (decapsulateData(buffer, &dataLength) == false) {
-				sprintf(string, "\tData could not be decapsulated\n");
-			} else {
-				m_nvm.nvmWriteBlock(startAddress, (uint8_t *)buffer, dataLength);
+// 			//decapsulate data
+// 			dataLength = (cmdLength - CMD_WRITE_NVM_LEN);
+// 			if (decapsulateData(buffer, &dataLength) == false) {
+// 				sprintf(string, "\tData could not be decapsulated\n");
+// 			} else {
+// 				m_nvm.nvmWriteBlock(startAddress, (uint8_t *)buffer, dataLength);
 
-				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
-				m_serial.print(string);
-				m_serial.print(buffer, dataLength);
-				sprintf(string, "\n");
-			}
-		} else {
-			sprintf(string, "dataLength %d < than given length %d\n",
-			dataLength, (cmdLength - CMD_WRITE_NVM_LEN) );
-		}
-	} else {
-			sprintf(string, "Invalid cmd.\n");
-	}
+// 				sprintf(string, "Start Adress: %d, Data length: %d, Data: ", startAddress, dataLength);
+// 				m_serial.print(string);
+// 				m_serial.print(buffer, dataLength);
+// 				sprintf(string, "\n");
+// 			}
+// 		} else {
+// 			sprintf(string, "dataLength %d < than given length %d\n",
+// 			dataLength, (cmdLength - CMD_WRITE_NVM_LEN) );
+// 		}
+// 	} else {
+// 			sprintf(string, "Invalid cmd.\n");
+// 	}
 
-	m_serial.print(string);
-	// updateHardware();
-	return;
-}
+// 	m_serial.print(string);
+// 	// updateHardware();
+// 	return;
+// }

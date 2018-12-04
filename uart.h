@@ -24,10 +24,13 @@
 // #define DEBUG_STR(x)			()
 // #endif
 
-class climateControl;
 
-//  AmemberFunc points to a member of A that takes ()
-typedef  void (climateControl::*callback)(char *, uint8_t);
+
+// class climateControl;
+
+// Callback function type definition.
+// f_callback_t is a type: fiunction pointer taking a char* and uint8_t, returning void)
+typedef void (*f_rxCallback_t)(char *, uint8_t);
 
 class uart {
 	public:
@@ -35,13 +38,15 @@ class uart {
 		void print(const char *string);
 		void print(const char *string, uint8_t len);
 		void Transmit(uint8_t data);
-		void checkBuffer(climateControl &c, callback cb);
-		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength);
-		bool isEqual(char *a, char *b, uint8_t length, uint8_t cmdLength, uint8_t equalLength);
-		bool isPartEqual(char *a, char *b, uint8_t validateLength);
+		void checkBuffer();
+		void setCallback(f_rxCallback_t);
+
 	private:
 		void Init(uint16_t baudrate);
 		uint8_t decodeBuffer(char *rxBuffer, uint8_t len);
+
+		/* Will report the bytes received on the rx line. */
+		f_rxCallback_t m_rxCallback;
 };
 
 #endif
