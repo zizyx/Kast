@@ -1,1 +1,6 @@
-2. CLimate control Plus hardware samenlinken
+PWM om fans aan te sturen
+Uitgelezen waarden naar Climate Control
+Watchdog opnieuw implementeren
+Lampen aansturen
+Waterpomp
+Timers implementeren
