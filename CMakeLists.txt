@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.3)
 
 project (Kast)
 
-execute_process(COMMAND "bash" "pre-build.sh"
+execute_process(COMMAND "bash" "tools/pre-build.sh"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
