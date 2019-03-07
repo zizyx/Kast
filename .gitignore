@@ -40,3 +40,11 @@
 *.map
 *.sym
 *.cfg
+
+#testing stuff
+CMakeFiles/*
+build/*
+CTestTestfile.cmake
+CMakeCache.txt
+cmake_install.cmake
+Makefile
