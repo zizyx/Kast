@@ -43,8 +43,12 @@
 
 #testing stuff
 CMakeFiles/*
+googletest/googlemock/CMakeFiles
+googletest/googlemock/gtest/CMakeFiles
 build/*
 CTestTestfile.cmake
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+*.cmake
+googletest/*Makefile
