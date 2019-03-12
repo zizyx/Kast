@@ -1,12 +1,13 @@
 #include <util/delay.h>
+#include <string.h>
+#include <stdio.h>
+#include <avr/interrupt.h>
+
 // #include "BMP_280.h"
 // #include "DS_3231.h"
 // #include "uart.h"
 // #include "adc.h"
-#include <string.h>
-#include <stdio.h>
 // #include "pdm.h"
-#include <avr/interrupt.h>
 // #include "climateControl.h"
 // #include "board.h"
 

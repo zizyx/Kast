@@ -6,20 +6,23 @@ execute_process(COMMAND "bash" "tools/pre-build.sh"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
+message (${PROJECT_SOURCE_DIR})
+
 if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
+# Compile googletest
 add_subdirectory(googletest)
 include_directories(googlemock/include googletest/include)
 
-# set (SRCS main.cc)
 # set(CMAKE_CXX_FLAGS "${CMAXE_CXX_FLAGS} -Wall -g")
 
-# add_executable (Kast ${SRCS})
 
+# Kast sources
+set (SRCS src/main.cpp)
 
-
+# TODO: add gmock targets.
 
 
 # add_subdirectory(Test)
