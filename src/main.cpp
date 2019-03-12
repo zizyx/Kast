@@ -18,8 +18,6 @@ extern "C" void __cxa_pure_virtual()
 }
 
 int main() {
-    uart            m_serial;
-    m_serial.setCallback(rxCallback);
 
 	// pdm *Pdm;
 	// BMP_280 baro_inside(0x76);
