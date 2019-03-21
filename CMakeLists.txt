@@ -22,6 +22,19 @@ include_directories(googlemock/include googletest/include)
 # Kast sources
 set (SRCS src/main.cpp)
 
+# Build targets for kast.
+add_custom_target(
+   kast
+   COMMAND make
+   WORKING_DIRECTORY $(PROJECT_SOURCE_DIR)/src/
+)
+
+add_custom_target(
+   clean 
+   COMMAND make clean
+   WORKING_DIRECTORY $(PROJECT_SOURCE_DIR)/src/
+)
+
 # TODO: add gmock targets.
 
 
