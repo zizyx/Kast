@@ -54,3 +54,5 @@ Makefile
 googletest/*Makefile
 
 googletest/CMakeFiles/CMakeDirectoryInformation.cmake
+Testing/
+*~
