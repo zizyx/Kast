@@ -18,9 +18,12 @@ include_directories(googlemock/include googletest/include)
 
 # set(CMAKE_CXX_FLAGS "${CMAXE_CXX_FLAGS} -Wall -g")
 
-
 # Kast sources
-set (SRCS src/main.cpp)
+set (SRCS
+  src/SystemTimer.cpp)
+
+set (TEST_SRCS
+  tests/SystemTimer_test.cpp)
 
 # Build targets for kast.
 add_custom_target(
@@ -39,8 +42,13 @@ add_custom_target(
 
 # Create executable with test from sources.
  add_executable(runTest
-     tests/SystemTimer_test.cpp
-     src/SystemTimer.cpp)
+     ${TEST_SRCS}
+     ${SRCS})
+
+# add_executable(runTest
+#     tests/SystemTimer_test.cpp
+#     src/SystemTimer.cpp)
+
 
 # Needed libraries
  target_link_libraries(runTest

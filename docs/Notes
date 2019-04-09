@@ -1,0 +1,4 @@
+#Run Specific tests
+
+./runtests --gtest_filter=SystemMonitorTest.SomethingToTest
+./runtests --gtest_filter=SystemMonitorTest*
