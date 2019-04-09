@@ -2,3 +2,7 @@
 
 ./runtests --gtest_filter=SystemMonitorTest.SomethingToTest
 ./runtests --gtest_filter=SystemMonitorTest*
+
+
+#Important
+ o Dont include main.cpp in test sources
