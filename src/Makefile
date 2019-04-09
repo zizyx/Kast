@@ -89,7 +89,7 @@ SRC =
 # List C++ source files here. (C dependencies are automatically generated.)
 
 # CPPSRC = $(TARGET).cpp adc.cpp BMP_280.cpp uart.cpp i2c.cpp DS_3231.cpp pdm.cpp climateControl.cpp
-CPPSRC = $(TARGET).cpp 
+CPPSRC = $(TARGET).cpp systemTimer.cpp
 
 # List Assembler source files here.
 #     Make them always end in a capital .S.  Files ending in a lowercase .s
