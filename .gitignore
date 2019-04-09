@@ -52,7 +52,7 @@ cmake_install.cmake
 Makefile
 *.cmake
 googletest/*Makefile
-
+runTest
 googletest/CMakeFiles/CMakeDirectoryInformation.cmake
 Testing/
 *~

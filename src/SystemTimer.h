@@ -1,10 +1,10 @@
 #ifndef SYSTEMTIMER_H
 #define SYSTEMTIMER_H
 
-class systemTimer {
+class SystemTimer {
 	public:
-		systemTimer();
-		~systemTimer(){};
+		SystemTimer();
+		~SystemTimer(){};
 
 		void checkSystemTimer();
 		void createEvent(struct timedEvent);

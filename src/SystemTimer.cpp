@@ -1,23 +1,23 @@
 /////////////////////////////////////////////////////////////////////////////////
-// systemTimer
+// SystemTimer
 /////////////////////////////////////////////////////////////////////////////////
-#include "systemTimer.h"
-#include "timedEvent.h"
+#include "SystemTimer.h"
+#include "TimedEvent.h"
 
-systemTimer::systemTimer() {
+SystemTimer::SystemTimer() {
 
 }
 
-void systemTimer::checkSystemTimer() {
+void SystemTimer::checkSystemTimer() {
 	checkEvents();
 }
 
-void systemTimer::createEvent(struct timedEvent) {
+void SystemTimer::createEvent(struct timedEvent) {
 
 }
 
 
-void systemTimer::checkEvents() {
+void SystemTimer::checkEvents() {
 
 }
 
