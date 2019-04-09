@@ -287,6 +287,8 @@ AVRDUDE_PROGRAMMER = arduino
 
 ifeq ($(OS),  Linux)
 AVRDUDE_PORT = /dev/ttyUSB0    # programmer connected to serial device
+else ifeq ($(OS), FreeBSD)
+AVRDUDE_PORT = /dev/TODO_WHATEVER_IT_IS
 else #WINDOOS
 AVRDUDE_PORT = COM4    # programmer connected to serial device 
 endif
