@@ -11,13 +11,6 @@
 // #include "climateControl.h"
 // #include "board.h"
 
-//TO DO:
-// PDM
-extern "C" void __cxa_pure_virtual()
-{
-	while (1);
-}
-
 int main() {
 
 	// pdm *Pdm;
