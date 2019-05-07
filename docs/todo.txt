@@ -4,6 +4,9 @@
 
 
 *                                 Embedded                                 *
+o Create RealTimeClock mock function for SystemTimerTest
+
+
 o Read nvm broken
 
 o Replace didi2ctimeout function with do_i2c
